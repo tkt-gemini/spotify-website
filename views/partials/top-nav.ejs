@@ -1,0 +1,28 @@
+<header class="top-nav">
+  <div class="nav-controls">
+    <button id="back-btn" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+    <button id="forward-btn" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  
+  <div class="search-container" style="display: <%= locals.page === 'pages/search' || (locals.title && locals.title.includes('Search')) ? 'block' : 'none' %>;">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" placeholder="What do you want to listen to?" id="search-input">
+    </div>
+  </div>
+
+  <div class="user-menu">
+    <button class="upgrade-btn" onclick="window.location.href='/switch-role/premium'" style="display: <%= user.role === 'free' ? 'inline-block' : 'none' %>">Upgrade</button>
+    <div class="dropdown">
+      <button class="user-profile-btn">
+        <i class="fas fa-user-circle"></i> <%= user.name %>
+      </button>
+      <div class="dropdown-content">
+        <div class="role-info">Current Role: <%= user.role %></div>
+        <a href="/switch-role/free">Switch to Free</a>
+        <a href="/switch-role/premium">Switch to Premium</a>
+        <a href="/switch-role/creator">Switch to Creator</a>
+      </div>
+    </div>
+  </div>
+</header>

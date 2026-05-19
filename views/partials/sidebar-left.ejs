@@ -1,0 +1,26 @@
+<aside class="sidebar-left">
+  <div class="brand">
+    <i class="fas fa-rocket"></i> Antigravity
+  </div>
+  <nav class="main-nav">
+    <ul>
+      <li><a href="/" class="nav-link"><i class="fas fa-home"></i> Home</a></li>
+      <li><a href="/search" class="nav-link"><i class="fas fa-search"></i> Search</a></li>
+      <li><a href="/library" class="nav-link"><i class="fas fa-book-open"></i> Your Library</a></li>
+      <% if (user.role === 'creator') { %>
+        <li><a href="/creator" class="nav-link"><i class="fas fa-upload"></i> Creator Studio</a></li>
+      <% } %>
+    </ul>
+  </nav>
+
+  <div class="library-section">
+    <div class="library-header">
+      <span>Playlists</span>
+      <button class="add-btn"><i class="fas fa-plus"></i></button>
+    </div>
+    <ul class="playlist-list">
+      <li><a href="/playlist/pl1" class="nav-link">Chill Vibes</a></li>
+      <li><a href="/playlist/pl2" class="nav-link">Premium Hits</a></li>
+    </ul>
+  </div>
+</aside>
