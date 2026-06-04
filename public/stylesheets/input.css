@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Buttons */
+  .btn-play {
+    @apply w-12 h-12 rounded-full bg-spotify-green hover:bg-[#3be477] hover:scale-105 transition-all flex items-center justify-center text-black shadow-[0_8px_8px_rgba(0,0,0,0.3)] active:scale-100;
+  }
+  
+  .btn-play-lg {
+    @apply w-14 h-14 rounded-full bg-spotify-green hover:bg-[#3be477] hover:scale-105 transition-all flex items-center justify-center text-black shadow-[0_8px_8px_rgba(0,0,0,0.3)] active:scale-100;
+  }
+
+  .btn-outline {
+    @apply border border-[#878787] text-white font-bold rounded-full px-4 py-1 hover:border-white hover:scale-105 transition-all;
+  }
+
+  .btn-primary {
+    @apply bg-white text-black font-bold rounded-full px-8 py-3 hover:scale-105 transition-all active:scale-100;
+  }
+  
+  /* Shared standard sections */
+  .section-title {
+    @apply text-white font-bold text-2xl hover:underline cursor-pointer;
+  }
+  
+  .page-header-title {
+    @apply text-white font-black leading-tight tracking-tighter;
+    font-size: clamp(2rem, 5vw, 6rem);
+  }
+}
+
+.grid-template-areas {
+  grid-template-areas:
+    "sidenav main"
+    "now-playing now-playing";
+}
+
+.grid-template-areas .content {
+  grid-area: main;
+}
+.grid-template-areas .sidenav {
+  grid-area: sidenav;
+}
+.grid-template-areas .now-playing {
+  grid-area: now-playing;
+}
+
+.track:hover .track-no,
+.track.selected .track-no {
+  visibility: hidden;
+}
+
+.track:hover .play,
+.track.selected .play {
+  visibility: visible;
+}
+
+.track.playing .track-no,
+.track.playing .song-title {
+  color: theme("colors.spotify.green");
+}
+
+.featured-songs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto; 
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+}
+
+.featured-songs::-webkit-scrollbar {
+  display: none; 
+}

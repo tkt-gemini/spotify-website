@@ -1,4 +1,4 @@
-const { User, Track, Playlist } = require('../models');
+const { User, Track, Playlist, PodcastShow, PodcastEpisode, ArtistProfile, PodcasterProfile } = require('../models');
 const mockDb = require('../data/mockDb');
 
 async function seedDatabase() {
@@ -12,9 +12,35 @@ async function seedDatabase() {
         await User.create({
           id: u.id, // Explicitly keep ID for matching in mock
           username: u.username,
-          role: u.role,
+          password: 'password123',
           name: u.name
         });
+      }
+
+      // Seed Artists
+      if (mockDb.artists) {
+        for (const a of mockDb.artists) {
+          await ArtistProfile.create({
+            id: a.id,
+            name: a.name,
+            userId: a.userId,
+            avatar: a.avatar,
+            bio: a.bio
+          });
+        }
+      }
+
+      // Seed Podcasters
+      if (mockDb.podcasters) {
+        for (const p of mockDb.podcasters) {
+          await PodcasterProfile.create({
+            id: p.id,
+            name: p.name,
+            userId: p.userId,
+            avatar: p.avatar,
+            description: p.description
+          });
+        }
       }
 
       // Seed Tracks
@@ -36,13 +62,38 @@ async function seedDatabase() {
         const playlist = await Playlist.create({
           id: p.id,
           title: p.title,
-          creator: p.creator
+          creatorId: 1 // Link to the first mock user
         });
         
         // Link tracks
         if (p.tracks && p.tracks.length > 0) {
           const tracks = await Track.findAll({ where: { id: p.tracks } });
           await playlist.addTracks(tracks);
+        }
+      }
+      // Seed Podcasts
+      if (mockDb.podcasts) {
+        for (const p of mockDb.podcasts) {
+          await PodcastShow.create({
+            id: p.id,
+            title: p.title,
+            description: p.description,
+            cover: p.cover,
+            ownerId: 3 // Link to Creator User (id: 3)
+          });
+          
+          if (p.episodes) {
+            for (const ep of p.episodes) {
+              await PodcastEpisode.create({
+                id: ep.id,
+                showId: p.id,
+                title: ep.title,
+                description: ep.description,
+                audio: ep.audio,
+                duration_ms: ep.duration_ms
+              });
+            }
+          }
         }
       }
       

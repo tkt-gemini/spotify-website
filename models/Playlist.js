@@ -10,9 +10,29 @@ const Playlist = sequelize.define('Playlist', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  creator: {
-    type: DataTypes.STRING,
+  creatorId: {
+    type: DataTypes.INTEGER,
     allowNull: false
+  },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  isPublic: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  cover: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  isFolder: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  parentId: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   timestamps: true

@@ -12,10 +12,22 @@ const Track = sequelize.define('Track', {
   },
   artist: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true
+  },
+  artistId: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  albumId: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   cover: {
     type: DataTypes.STRING,
+    allowNull: true
+  },
+  lyrics: {
+    type: DataTypes.TEXT,
     allowNull: true
   },
   audio: {
@@ -26,11 +38,6 @@ const Track = sequelize.define('Track', {
     type: DataTypes.STRING, // 'song' or 'podcast'
     allowNull: false,
     defaultValue: 'song'
-  },
-  isPremium: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false
   },
   playCount: {
     type: DataTypes.INTEGER,

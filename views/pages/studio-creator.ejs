@@ -1,0 +1,306 @@
+<%# Creator Studio Dashboard — /studio/creator ─── Data vars: shows[], show{} (optional), isPodcaster %>
+
+<%
+  // Determine view mode: show-detail (single show open) vs list mode
+  const studioViewShow = typeof show !== 'undefined' && show;
+  const studioShows = typeof shows !== 'undefined' ? shows : [];
+%>
+
+<div id="creator-studio-root" class="flex flex-col min-h-full w-full bg-spotify-black"
+  data-show-id="<%= studioViewShow ? studioViewShow.id : '' %>">
+
+  <%# ── Top Header ───────────────────────────────────────────────────── %>
+  <div class="relative overflow-hidden shrink-0">
+    <div class="absolute inset-0" style="background: linear-gradient(135deg, #0d1f0d 0%, #121212 60%);"></div>
+    <div class="absolute inset-0" style="background: radial-gradient(ellipse at 10% 80%, rgba(29,185,84,0.12) 0%, transparent 55%);"></div>
+    <div class="relative z-10 px-8 pt-20 pb-8 flex items-end gap-4">
+      <a href="/studio" class="text-[#a7a7a7] hover:text-white text-sm font-semibold flex items-center gap-1 mb-1 transition-colors">
+        <i class="ph ph-caret-left text-lg"></i>
+        Studio
+      </a>
+      <span class="text-[#a7a7a7] text-sm mb-1">/</span>
+      <div>
+        <p class="text-spotify-green text-xs font-bold uppercase tracking-[0.2em] mb-1">Creator Studio</p>
+        <h1 class="text-white text-3xl font-black tracking-tight">
+          <% if (studioViewShow) { %>
+            <%= studioViewShow.title %>
+          <% } else { %>
+            Your Podcast Shows
+          <% } %>
+        </h1>
+      </div>
+      <div class="ml-auto">
+        <% if (!studioViewShow) { %>
+          <button id="cs-create-show-btn"
+            class="flex items-center gap-2 px-5 py-2.5 bg-spotify-green hover:bg-spotify-green-hover text-black font-bold text-sm rounded-full transition-colors shadow-lg">
+            <i class="ph ph-plus text-lg"></i>
+            New Show
+          </button>
+        <% } else { %>
+          <a href="/studio/creator" class="flex items-center gap-2 px-4 py-2 border border-white/20 hover:border-white text-white text-sm font-semibold rounded-full transition-colors">
+            <i class="ph ph-list-dashes text-lg"></i>
+            All Shows
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <%# ══════════════════════════════════════════════════════════════════ %>
+  <%# ── MODE A: SHOWS LIST ─────────────────────────────────────────── %>
+  <%# ══════════════════════════════════════════════════════════════════ %>
+  <% if (!studioViewShow) { %>
+    <div class="px-8 py-6 flex-1">
+      <% if (studioShows.length === 0) { %>
+        <div class="flex flex-col items-center justify-center py-24 text-center">
+          <div class="w-24 h-24 rounded-2xl bg-[#282828] flex items-center justify-center mb-6">
+            <i class="ph ph-microphone-stage text-[#727272] text-5xl"></i>
+          </div>
+          <h2 class="text-white text-2xl font-bold mb-3">No shows yet</h2>
+          <p class="text-[#a7a7a7] text-sm mb-6 max-w-xs">Create your first podcast show and start uploading episodes.</p>
+          <button id="cs-create-show-btn-empty"
+            class="flex items-center gap-2 px-6 py-3 bg-spotify-green hover:bg-spotify-green-hover text-black font-bold text-sm rounded-full transition-colors">
+            <i class="ph ph-plus"></i>
+            Create Show
+          </button>
+        </div>
+      <% } else { %>
+        <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+          <% studioShows.forEach(s => { %>
+            <div class="group relative bg-white/5 backdrop-blur-xl hover:bg-white/10 rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-[0_8px_30px_rgba(29,185,84,0.15)]"
+                 onclick="window.location.href='/studio/creator/show/<%= s.id %>'">
+              <%# Cover + info row %>
+              <div class="flex items-center gap-4 p-4">
+                <div class="w-16 h-16 rounded-lg bg-[#282828] overflow-hidden shrink-0 shadow-md">
+                  <% if (s.cover) { %>
+                    <img src="<%= s.cover %>" class="w-full h-full object-cover" alt="<%= s.title %>">
+                  <% } else { %>
+                    <div class="w-full h-full flex items-center justify-center">
+                      <i class="ph ph-microphone-stage text-[#727272] text-2xl"></i>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-white font-bold truncate"><%= s.title %></h3>
+                  <p class="text-[#a7a7a7] text-xs mt-0.5">
+                    <%= s.episodeCount || 0 %> episode<%= (s.episodeCount || 0) !== 1 ? 's' : '' %>
+                    <% if (s.publishedCount) { %> · <span class="text-spotify-green"><%= s.publishedCount %> published</span><% } %>
+                  </p>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full
+                      <%= s.status === 'active' ? 'bg-spotify-green/10 text-spotify-green border border-spotify-green/20' : 'bg-white/5 text-[#727272] border border-white/10' %>">
+                      <%= s.status %>
+                    </span>
+                    <% if (s.category) { %><span class="text-[#727272] text-xs"><%= s.category %></span><% } %>
+                  </div>
+                </div>
+                <i class="ph ph-caret-right text-[#727272] group-hover:text-white transition-colors"></i>
+              </div>
+
+              <%# Quick actions row %>
+              <div class="border-t border-white/5 px-4 py-2.5 flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button class="text-[#a7a7a7] hover:text-white text-xs flex items-center gap-1 transition-colors cs-edit-show-btn"
+                  data-id="<%= s.id %>" data-title="<%= s.title %>"
+                  data-description="<%= s.description || '' %>"
+                  data-category="<%= s.category || '' %>"
+                  data-language="<%= s.language || 'en' %>"
+                  data-cover="<%= s.cover || '' %>"
+                  onclick="event.stopPropagation(); window.csOpenEditShow(this)">
+                  <i class="ph ph-pencil-simple text-base"></i> Edit
+                </button>
+                <button class="text-[#a7a7a7] hover:text-red-400 text-xs flex items-center gap-1 transition-colors cs-delete-show-btn"
+                  data-id="<%= s.id %>" data-title="<%= s.title %>"
+                  onclick="event.stopPropagation(); window.csDeleteShow(this)">
+                  <i class="ph ph-trash text-base"></i> Delete
+                </button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+  <%# ══════════════════════════════════════════════════════════════════ %>
+  <%# ── MODE B: SHOW DASHBOARD ─────────────────────────────────────── %>
+  <%# ══════════════════════════════════════════════════════════════════ %>
+  <% } else { %>
+    <div class="flex flex-col flex-1 min-h-0">
+
+      <%# Show header card %>
+      <div class="flex items-center gap-6 px-8 py-6 bg-white/5 backdrop-blur-xl border-b border-white/10 shrink-0 shadow-lg">
+        <div class="w-24 h-24 rounded-xl overflow-hidden shrink-0 shadow-[0_0_20px_rgba(0,0,0,0.5)] bg-[#282828] border border-white/10">
+          <% if (studioViewShow.cover) { %>
+            <img src="<%= studioViewShow.cover %>" class="w-full h-full object-cover">
+          <% } else { %>
+            <div class="w-full h-full flex items-center justify-center">
+              <i class="ph ph-microphone-stage text-[#727272] text-3xl"></i>
+            </div>
+          <% } %>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h2 class="text-white font-black text-2xl truncate"><%= studioViewShow.title %></h2>
+          <p class="text-[#a7a7a7] text-sm line-clamp-1"><%= studioViewShow.description || 'No description.' %></p>
+          <div class="flex items-center gap-3 mt-2">
+            <% if (studioViewShow.category) { %><span class="text-xs text-[#a7a7a7]"><%= studioViewShow.category %></span><% } %>
+            <% if (studioViewShow.language) { %><span class="text-xs text-[#a7a7a7]">· <%= studioViewShow.language.toUpperCase() %></span><% } %>
+            <% if (studioViewShow.explicit) { %><span class="text-xs font-bold bg-[#a7a7a7] text-black px-1 rounded">E</span><% } %>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button class="px-5 py-2.5 rounded-full border border-white/30 hover:border-white bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-all duration-300 shadow-md cs-edit-show-btn"
+            data-id="<%= studioViewShow.id %>"
+            data-title="<%= studioViewShow.title %>"
+            data-description="<%= studioViewShow.description || '' %>"
+            data-category="<%= studioViewShow.category || '' %>"
+            data-language="<%= studioViewShow.language || 'en' %>"
+            data-cover="<%= studioViewShow.cover || '' %>"
+            onclick="window.csOpenEditShow(this)">
+            <i class="ph ph-pencil-simple text-base align-middle"></i> Edit Show
+          </button>
+          <a href="/podcast/<%= studioViewShow.id %>" target="_blank"
+            class="px-4 py-2 rounded-full border border-white/20 hover:border-white text-white text-sm font-semibold transition-colors flex items-center gap-1">
+            <i class="ph ph-arrow-square-out text-base"></i> View Public
+          </a>
+        </div>
+      </div>
+
+      <%# Tab navigation %>
+      <div class="flex gap-0 border-b border-white/5 shrink-0 px-8">
+        <button class="cs-tab-btn active-tab px-5 py-3 text-sm font-bold border-b-2 transition-colors" data-tab="episodes">
+          Episodes
+        </button>
+        <button class="cs-tab-btn px-5 py-3 text-sm font-semibold text-[#a7a7a7] hover:text-white border-b-2 border-transparent transition-colors" data-tab="analytics">
+          Analytics
+        </button>
+      </div>
+
+      <%# ── TAB: EPISODES ────────────────────────────────────────────── %>
+      <div id="cs-tab-episodes" class="flex-1 overflow-y-auto px-8 py-6">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-white font-bold text-lg">
+            All Episodes
+            <span class="text-[#a7a7a7] font-normal text-sm ml-2">
+              (<%= studioViewShow.episodes ? studioViewShow.episodes.length : 0 %>)
+            </span>
+          </h3>
+          <button id="cs-new-episode-btn"
+            data-show-id="<%= studioViewShow.id %>"
+            class="flex items-center gap-2 px-4 py-2 bg-spotify-green hover:bg-spotify-green-hover text-black font-bold text-sm rounded-full transition-colors">
+            <i class="ph ph-plus text-base"></i>
+            New Episode
+          </button>
+        </div>
+
+        <div id="cs-episodes-list" class="flex flex-col gap-3">
+          <% if (!studioViewShow.episodes || studioViewShow.episodes.length === 0) { %>
+            <div class="flex flex-col items-center py-16 text-center">
+              <i class="ph ph-microphone text-[#727272] text-5xl mb-4"></i>
+              <p class="text-white font-semibold mb-2">No episodes yet</p>
+              <p class="text-[#a7a7a7] text-sm">Click <strong>New Episode</strong> to upload your first episode.</p>
+            </div>
+          <% } else { %>
+            <% studioViewShow.episodes.forEach(ep => { %>
+              <div class="episode-row group flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 transition-all duration-300 hover:shadow-lg"
+                   data-episode-id="<%= ep.id %>">
+                <%# Status indicator %>
+                <div class="w-2 h-2 rounded-full shrink-0 <%= ep.status === 'published' ? 'bg-spotify-green' : 'bg-[#727272]' %>"></div>
+
+                <%# Info %>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-white font-semibold truncate"><%= ep.title %></h4>
+                  <div class="flex items-center gap-3 mt-0.5">
+                    <span class="text-xs font-bold uppercase tracking-wider
+                      <%= ep.status === 'published' ? 'text-spotify-green' : 'text-[#a7a7a7]' %>">
+                      <%= ep.status %>
+                    </span>
+                    <% if (ep.explicit) { %>
+                      <span class="text-[10px] font-bold bg-[#a7a7a7] text-black px-1 rounded">E</span>
+                    <% } %>
+                    <% if (ep.audio) { %>
+                      <span class="text-[#727272] text-xs flex items-center gap-1">
+                        <i class="ph ph-file-audio text-sm"></i> Audio
+                      </span>
+                    <% } else { %>
+                      <span class="text-red-400/70 text-xs flex items-center gap-1">
+                        <i class="ph ph-warning text-sm"></i> No audio
+                      </span>
+                    <% } %>
+                  </div>
+                </div>
+
+                <%# Actions %>
+                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <% if (ep.status !== 'published') { %>
+                    <button class="cs-publish-ep-btn px-3 py-1.5 rounded-full bg-spotify-green/10 hover:bg-spotify-green text-spotify-green hover:text-black text-xs font-bold transition-colors border border-spotify-green/30"
+                      data-id="<%= ep.id %>">
+                      Publish
+                    </button>
+                  <% } else { %>
+                    <button class="cs-unpublish-ep-btn px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-[#a7a7a7] hover:text-white text-xs font-semibold transition-colors border border-white/10"
+                      data-id="<%= ep.id %>">
+                      Unpublish
+                    </button>
+                  <% } %>
+                  <button class="cs-edit-ep-btn w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-[#a7a7a7] hover:text-white transition-colors"
+                    data-id="<%= ep.id %>"
+                    data-title="<%= ep.title %>"
+                    data-description="<%= ep.description || '' %>"
+                    data-explicit="<%= ep.explicit ? 'true' : 'false' %>"
+                    data-status="<%= ep.status %>"
+                    data-audio="<%= ep.audio || '' %>"
+                    data-show-id="<%= studioViewShow.id %>">
+                    <i class="ph ph-pencil-simple text-base"></i>
+                  </button>
+                  <button class="cs-delete-ep-btn w-8 h-8 rounded-full hover:bg-red-500/10 flex items-center justify-center text-[#a7a7a7] hover:text-red-400 transition-colors"
+                    data-id="<%= ep.id %>"
+                    data-title="<%= ep.title %>">
+                    <i class="ph ph-trash text-base"></i>
+                  </button>
+                </div>
+              </div>
+            <% }) %>
+          <% } %>
+        </div>
+      </div>
+
+      <%# ── TAB: ANALYTICS (mock) ───────────────────────────────────── %>
+      <div id="cs-tab-analytics" class="hidden flex-1 overflow-y-auto px-8 py-6">
+        <%
+          const epCount = studioViewShow.episodes ? studioViewShow.episodes.length : 0;
+          const pubCount = studioViewShow.episodes ? studioViewShow.episodes.filter(e => e.status === 'published').length : 0;
+        %>
+        <div class="grid grid-cols-2 gap-4 mb-8" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg transition-transform duration-300">
+            <p class="text-[#a7a7a7] text-xs font-semibold uppercase tracking-wider mb-2">Total Episodes</p>
+            <p class="text-white text-4xl font-black"><%= epCount %></p>
+          </div>
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg transition-transform duration-300">
+            <p class="text-[#a7a7a7] text-xs font-semibold uppercase tracking-wider mb-2">Published</p>
+            <p class="text-spotify-green text-4xl font-black drop-shadow-[0_0_10px_rgba(29,185,84,0.4)]"><%= pubCount %></p>
+          </div>
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg transition-transform duration-300">
+            <p class="text-[#a7a7a7] text-xs font-semibold uppercase tracking-wider mb-2">Listeners</p>
+            <p class="text-white text-4xl font-black"><%= studioViewShow.stats ? studioViewShow.stats.monthlyListeners.toLocaleString() : '0' %></p>
+            <p class="text-[#727272] text-xs mt-1">Last 30 days</p>
+          </div>
+          <div class="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-lg transition-transform duration-300">
+            <p class="text-[#a7a7a7] text-xs font-semibold uppercase tracking-wider mb-2">Followers</p>
+            <p class="text-white text-4xl font-black"><%= studioViewShow.stats ? studioViewShow.stats.followersCount.toLocaleString() : '0' %></p>
+            <p class="text-[#727272] text-xs mt-1">All time</p>
+          </div>
+        </div>
+        <div class="bg-[#181818] rounded-xl p-8 border border-white/5 flex flex-col items-center text-center">
+          <i class="ph ph-chart-bar text-[#727272] text-5xl mb-4"></i>
+          <p class="text-white font-semibold mb-2">Detailed analytics coming soon</p>
+          <p class="text-[#a7a7a7] text-sm max-w-sm">Listener data, play counts, and audience retention will be available here once the analytics engine is connected.</p>
+        </div>
+      </div>
+
+    </div>
+  <% } %>
+</div>
+
+<style>
+  .cs-tab-btn { color: #a7a7a7; border-bottom: 2px solid transparent; }
+  .cs-tab-btn.active-tab { color: #fff; border-bottom-color: #1ed760; }
+</style>

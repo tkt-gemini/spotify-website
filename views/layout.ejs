@@ -1,37 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="text-white bg-spotify-base">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %></title>
-  <link rel='stylesheet' href='/stylesheets/style.css' />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
-  <div class="app-container">
+  <title><%= typeof title !== 'undefined' ? title : 'Spotify - Web Player' %></title>
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <style>
     
-    <!-- Left Sidebar: Library & Nav -->
-    <%- include('partials/sidebar-left') %>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent; 
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.3); 
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5); 
+    }
+    
+    /* Layout grid definition based on spec */
+    .spotify-app-grid {
+      display: grid;
+      grid-template-areas:
+        "nav-bar main-view right-panel"
+        "now-playing-bar now-playing-bar now-playing-bar";
+      grid-template-columns: 280px 1fr auto;
+      grid-template-rows: 1fr auto;
+      height: 100vh;
+      min-height: 100%;
+      position: relative;
+      width: 100%;
+    }
+    
+    /* Responsive overrides */
+    @media (max-width: 768px) {
+      .spotify-app-grid {
+        grid-template-areas:
+          "main-view"
+          "now-playing-bar";
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+      .spotify-app-grid > nav {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="font-sans antialiased bg-spotify-base text-white h-screen w-screen overflow-hidden select-none">
 
-    <div class="main-wrapper">
-      <!-- Top Navigation -->
-      <%- include('partials/top-nav') %>
-
-      <!-- Central Content Area (AJAX updates this) -->
-      <main id="central-content">
+  <div id="app" class="spotify-app-grid p-2 gap-2 h-full w-full box-border">
+    
+    <!-- Left Sidebar -->
+    <nav class="[grid-area:nav-bar] flex flex-col gap-2 min-h-0 relative">
+      <%- include('partials/sidebar-left') %>
+      <!-- Drag handle -->
+      <div id="sidebar-resizer" class="absolute top-0 -right-2 w-4 h-full cursor-col-resize z-50 group flex justify-center">
+        <div class="w-[1px] h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      </div>
+    </nav>
+    
+    <!-- Main View (Main Content Area) -->
+    <main class="[grid-area:main-view] flex flex-col bg-spotify-black rounded-lg overflow-hidden min-h-0 relative">
+      <%- include('partials/top-bar') %>
+      
+      <!-- Scrollable content area -->
+      <div id="main-content-area" class="flex-1 overflow-y-auto relative z-10">
         <%- include(page) %>
-      </main>
-    </div>
+      </div>
 
-    <!-- Right Sidebar: Context / Ads -->
-    <%- include('partials/sidebar-right') %>
+      <!-- Lyrics Overlay -->
+      <div id="lyrics-view-overlay" class="absolute inset-0 top-[64px] bg-gradient-to-b from-[#4a3b32] to-[#121212] flex-col overflow-y-auto hidden z-30 transition-opacity duration-300 opacity-0 px-8 py-6 custom-scrollbar">
+        <div class="flex items-center justify-between mb-8 sticky top-0 bg-transparent py-2">
+          <h2 class="text-white font-black text-2xl tracking-tighter">Lyrics</h2>
+          <button id="close-lyrics-btn" class="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white transition-colors">
+            <i class="ph ph-x text-lg"></i>
+          </button>
+        </div>
+        <div id="lyrics-content" class="max-w-3xl mx-auto w-full text-white/80 font-bold text-3xl md:text-4xl leading-relaxed tracking-tight whitespace-pre-wrap">
+          <!-- Lyrics will be injected here -->
+        </div>
+      </div>
+    </main>
+    
+    <!-- Right Sidebar (Optional) -->
+    <aside id="right-sidebar" class="[grid-area:right-panel] bg-spotify-black rounded-lg overflow-hidden min-h-0 hidden xl:flex flex-col relative" style="width: 280px;">
+      <!-- Drag handle for right sidebar -->
+      <div id="right-sidebar-resizer" class="absolute top-0 left-0 w-2 h-full cursor-col-resize z-50 group flex justify-start">
+        <div class="w-[1px] h-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      </div>
+      <%- include('partials/sidebar-right') %>
+    </aside>
+    
+    <!-- Bottom Playback Bar -->
+    <footer class="[grid-area:now-playing-bar] h-[90px] flex items-center justify-between px-4 bg-spotify-base shrink-0 z-50">
+      <%- include('partials/playback-bar') %>
+    </footer>
     
   </div>
 
-  <!-- Bottom Player -->
-  <%- include('partials/player') %>
+  <%- include('partials/modals') %>
 
-  <!-- Application Logic -->
-  <script src="/javascripts/app.js"></script>
+  <!-- Application Logic Modules -->
+  <script src="/js/modules/navigation.js"></script>
+  <script src="/js/modules/library.js"></script>
+  <script src="/js/modules/sidebar.js"></script>
+  <script src="/js/modules/search.js"></script>
+  <script src="/js/modules/modals.js"></script>
+  <script src="/js/modules/studio.js"></script>
+
+  <script src="/js/modules/player.js"></script>
+
 </body>
 </html>

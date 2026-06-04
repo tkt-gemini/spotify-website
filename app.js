@@ -8,7 +8,9 @@ var session = require('express-session');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var authRouter = require('./routes/auth');
 var apiRouter = require('./routes/api');
+var adminRouter = require('./routes/admin');
 
 var app = express();
 
@@ -16,9 +18,8 @@ var app = express();
 const { sequelize, User } = require('./models');
 const seedDatabase = require('./database/seed');
 
-sequelize.sync({ alter: true })
-  .then(() => seedDatabase())
-  .then(() => console.log('Database synced and seeded'))
+sequelize.sync()
+  .then(() => console.log('Database synced'))
   .catch(err => console.error('Failed to sync database:', err));
 
 // view engine setup
@@ -33,52 +34,41 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // session setup
 app.use(session({
-  secret: 'antigravity-secret-key',
+  secret: process.env.SESSION_SECRET || 'antigravity-secret-key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // false for dev without https
+  cookie: { secure: process.env.NODE_ENV === 'production' } // secure in production
 }));
 
-// Mock user authentication middleware (default to free_user for demo)
-app.use(async (req, res, next) => {
-  try {
-    if (!req.session.user) {
-      const defaultUser = await User.findOne({ where: { username: 'free_user' } });
-      if (defaultUser) {
-        req.session.user = defaultUser.toJSON();
-      }
-    }
-    res.locals.user = req.session.user;
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Middleware to detect partial requests (for seamless navigation)
+// Real Auth Middleware
 app.use((req, res, next) => {
-  res.locals.isPartial = req.xhr || req.headers['x-partial-request'] === 'true' || req.query.partial === 'true';
+  if (req.path.startsWith('/auth') || req.path.startsWith('/stylesheets') || req.path.startsWith('/javascripts') || req.path.startsWith('/media') || req.path.startsWith('/api')) {
+    return next();
+  }
+  if (!req.session.user) {
+    if (req.xhr || req.headers['x-partial-request'] === 'true' || req.query.partial === 'true') {
+      return res.status(401).send('Unauthorized. Please login.');
+    }
+    return res.redirect('/auth/login');
+  }
+  res.locals.user = req.session.user;
   next();
 });
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/auth', authRouter);
 app.use('/api', apiRouter);
+app.use('/admin', adminRouter);
+
+const errorHandler = require('./middlewares/errorHandler');
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+// global error handler
+app.use(errorHandler);
 
 module.exports = app;
