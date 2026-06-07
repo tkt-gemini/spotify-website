@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/prisma');
-const upload = require('../middlewares/upload');
+const { upload } = require('../middlewares/upload');
 const { requireArtistRole } = require('../middlewares/auth');
 const fs = require('fs');
 const path = require('path');

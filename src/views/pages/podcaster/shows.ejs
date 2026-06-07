@@ -1,1 +1,39 @@
-<h1 class="text-3xl">Podcaster Shows Dashboard</h1>
+<div class="max-w-4xl mx-auto py-12">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold">Select Show</h1>
+    <a href="/podcaster/shows/new" class="bg-white text-black px-4 py-2 rounded-full font-bold text-sm hover:scale-105 transition-transform">
+      Create Show
+    </a>
+  </div>
+
+  <% if (teamMembers && teamMembers.length > 0) { %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% teamMembers.forEach(tm => { %>
+        <a href="/podcaster/shows/<%= tm.show.id %>" class="bg-zinc-800/40 hover:bg-zinc-800 p-6 rounded-lg transition-colors group flex items-center gap-4">
+          <div class="w-16 h-16 rounded bg-zinc-700 flex-shrink-0 overflow-hidden shadow-lg group-hover:scale-105 transition-transform">
+            <% if (tm.show.coverUrl) { %>
+              <img src="<%= tm.show.coverUrl %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <div class="w-full h-full flex items-center justify-center text-zinc-500">
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+              </div>
+            <% } %>
+          </div>
+          <div class="flex flex-col">
+            <span class="font-bold text-white text-lg"><%= tm.show.title %></span>
+            <span class="text-xs text-zinc-400 bg-zinc-700/50 w-max px-2 py-0.5 rounded mt-1 uppercase"><%= tm.role %></span>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="text-center py-20 bg-zinc-800/20 rounded-lg border border-zinc-800 border-dashed">
+      <svg class="w-16 h-16 text-zinc-600 mx-auto mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      <h2 class="text-xl font-bold mb-2">You aren't managing any shows</h2>
+      <p class="text-zinc-400 mb-6 max-w-md mx-auto">Create a new podcast show to start uploading episodes.</p>
+      <a href="/podcaster/shows/new" class="bg-white text-black px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform inline-block">
+        Create Show
+      </a>
+    </div>
+  <% } %>
+</div>

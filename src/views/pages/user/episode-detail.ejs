@@ -1,0 +1,41 @@
+<div class="mb-8 max-w-4xl mx-auto">
+  <div class="bg-zinc-900/50 rounded-xl p-8 mt-4">
+    <div class="flex items-start gap-8">
+      <div class="w-48 h-48 rounded shadow-2xl overflow-hidden flex-shrink-0 bg-zinc-800">
+        <% if (episode.show.coverUrl) { %>
+          <img src="<%= episode.show.coverUrl %>" class="w-full h-full object-cover">
+        <% } else { %>
+          <div class="w-full h-full flex items-center justify-center text-zinc-500">
+            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+          </div>
+        <% } %>
+      </div>
+      
+      <div class="flex-1 min-w-0">
+        <span class="text-xs font-bold uppercase tracking-widest text-zinc-400 mb-2 block">Podcast Episode</span>
+        <h1 class="text-4xl font-bold text-white mb-4"><%= episode.title %></h1>
+        <a href="/app/podcasts/<%= episode.show.id %>" class="text-xl font-bold text-zinc-300 hover:text-white hover:underline mb-6 inline-block">
+          <%= episode.show.title %>
+        </a>
+        
+        <div class="flex items-center gap-4 mb-8">
+          <button class="js-play-entity bg-green-500 text-black w-14 h-14 rounded-full flex items-center justify-center hover:scale-105 transition-transform" data-entity-type="episode" data-entity-id="<%= episode.id %>" <%= !episode.audioUrl ? 'disabled' : '' %>>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          
+          <div class="flex flex-col">
+            <span class="text-xs text-zinc-400 font-bold uppercase"><%= new Date(episode.publishedAt || episode.createdAt).toLocaleDateString() %></span>
+            <% if (episode.duration) { %>
+              <span class="text-xs text-zinc-400 font-bold uppercase"><%= Math.floor(episode.duration / 60) %> min <%= episode.duration % 60 %> sec</span>
+            <% } %>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-bold mb-2">Episode Description</h3>
+          <p class="text-zinc-300 leading-relaxed whitespace-pre-wrap"><%= episode.description || 'No description provided.' %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

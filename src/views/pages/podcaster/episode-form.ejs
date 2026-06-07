@@ -1,0 +1,38 @@
+<div class="max-w-2xl mx-auto py-8">
+  <div class="mb-8">
+    <a href="/podcaster/shows/<%= currentShow.id %>/episodes" class="text-zinc-400 hover:text-white text-sm mb-4 inline-block">&larr; Back to Episodes</a>
+    <h1 class="text-3xl font-bold"><%= episode ? 'Edit Episode' : 'Upload New Episode' %></h1>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-md mb-6">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <form action="<%= episode ? `/podcaster/episodes/${episode.id}` : `/podcaster/shows/${currentShow.id}/episodes` %>" method="POST" enctype="multipart/form-data" class="space-y-6 bg-zinc-900 p-8 rounded-lg">
+    <div>
+      <label for="title" class="block text-sm font-bold mb-2">Episode Title <span class="text-red-500">*</span></label>
+      <input type="text" id="title" name="title" value="<%= episode ? episode.title : '' %>" required class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Episode 1: The Beginning">
+    </div>
+
+    <div>
+      <label for="description" class="block text-sm font-bold mb-2">Description (Optional)</label>
+      <textarea id="description" name="description" rows="4" class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="Show notes, links, etc..."><%= episode && episode.description ? episode.description : '' %></textarea>
+    </div>
+
+    <div>
+      <label for="audio" class="block text-sm font-bold mb-2">Audio File</label>
+      <input type="file" id="audio" name="audio" accept="audio/mpeg, audio/wav, audio/x-wav, audio/ogg" class="w-full text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors">
+      <p class="text-xs text-zinc-500 mt-2">Max 300MB. MP3, WAV, or OGG. Required if publishing.</p>
+      <% if (episode && episode.audioUrl) { %>
+        <p class="text-xs text-green-500 mt-1">✓ Audio file already uploaded. Uploading a new one will replace it.</p>
+      <% } %>
+    </div>
+
+    <div class="pt-4 border-t border-zinc-800 flex justify-end gap-4">
+      <button type="submit" name="action" value="draft" class="px-6 py-3 font-bold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 rounded-full transition-colors">Save Draft</button>
+      <button type="submit" name="action" value="publish" class="bg-green-500 text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Publish Episode</button>
+    </div>
+  </form>
+</div>

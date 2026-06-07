@@ -1,0 +1,87 @@
+<div class="max-w-5xl mx-auto">
+  <!-- Banner & Info -->
+  <div class="relative h-64 rounded-xl overflow-hidden bg-zinc-800 mb-8">
+    <div class="w-full h-full bg-gradient-to-br from-zinc-800 to-black"></div>
+    
+    <div class="absolute bottom-0 left-0 p-8 flex items-end gap-6">
+      <div class="w-32 h-32 rounded overflow-hidden shadow-2xl bg-zinc-700">
+        <% if (currentShow.coverUrl) { %>
+          <img src="<%= currentShow.coverUrl %>" class="w-full h-full object-cover">
+        <% } else { %>
+          <div class="w-full h-full flex items-center justify-center text-zinc-500">
+            <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+          </div>
+        <% } %>
+      </div>
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-zinc-300">Podcast Show</span>
+        <h1 class="text-5xl font-extrabold text-white mt-1 mb-2"><%= currentShow.title %></h1>
+        <p class="text-zinc-300 max-w-2xl"><%= currentShow.description || 'No description provided.' %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="bg-zinc-800/50 p-6 rounded-lg">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Episodes</h3>
+      <p class="text-4xl font-bold"><%= totalEpisodes %></p>
+    </div>
+    <div class="bg-zinc-800/50 p-6 rounded-lg">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Published Episodes</h3>
+      <p class="text-4xl font-bold text-green-500"><%= publishedEpisodes %></p>
+    </div>
+    <div class="bg-zinc-800/50 p-6 rounded-lg flex flex-col justify-center items-center">
+      <a href="/podcaster/shows/<%= currentShow.id %>/episodes/new" class="bg-white text-black px-6 py-3 rounded-full font-bold w-full text-center hover:scale-105 transition-transform">
+        Upload New Episode
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Episodes -->
+  <div>
+    <h2 class="text-2xl font-bold mb-6">Recent Episodes</h2>
+    <% if (currentShow.episodes && currentShow.episodes.length > 0) { %>
+      <div class="bg-zinc-800/30 rounded-lg overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
+              <th class="p-4 font-normal uppercase tracking-wider">Title</th>
+              <th class="p-4 font-normal uppercase tracking-wider">Status</th>
+              <th class="p-4 font-normal uppercase tracking-wider">Scheduled For</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% currentShow.episodes.forEach(ep => { %>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+                <td class="p-4 font-bold text-white"><%= ep.title %></td>
+                <td class="p-4">
+                  <% if (ep.status === 'PUBLISHED') { %>
+                    <span class="px-2 py-1 bg-green-500/20 text-green-500 text-xs rounded-full uppercase font-bold">Published</span>
+                  <% } else if (ep.scheduledAt) { %>
+                    <span class="px-2 py-1 bg-yellow-500/20 text-yellow-500 text-xs rounded-full uppercase font-bold">Scheduled</span>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-zinc-700 text-zinc-300 text-xs rounded-full uppercase font-bold">Draft</span>
+                  <% } %>
+                </td>
+                <td class="p-4 text-zinc-400 text-sm">
+                  <%= ep.scheduledAt ? new Date(ep.scheduledAt).toLocaleString() : '-' %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-4 text-right">
+        <a href="/podcaster/shows/<%= currentShow.id %>/episodes" class="text-zinc-400 hover:text-white text-sm font-bold uppercase tracking-wider">View all episodes &rarr;</a>
+      </div>
+    <% } else { %>
+      <div class="text-center py-12 bg-zinc-800/20 rounded-lg border border-zinc-800 border-dashed">
+        <p class="text-zinc-400 mb-4">You haven't uploaded any episodes yet.</p>
+        <a href="/podcaster/shows/<%= currentShow.id %>/episodes/new" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform inline-block">
+          Upload Episode
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+<div class="max-w-5xl mx-auto">
+  <div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold">Episodes</h1>
+    <a href="/podcaster/shows/<%= currentShow.id %>/episodes/new" class="bg-white text-black px-4 py-2 rounded-full font-bold text-sm hover:scale-105 transition-transform">
+      New Episode
+    </a>
+  </div>
+
+  <% if (episodes && episodes.length > 0) { %>
+    <div class="bg-zinc-800/30 rounded-lg overflow-hidden">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
+            <th class="p-4 font-normal uppercase tracking-wider">Title</th>
+            <th class="p-4 font-normal uppercase tracking-wider">Status</th>
+            <th class="p-4 font-normal uppercase tracking-wider">Audio File</th>
+            <th class="p-4 font-normal uppercase tracking-wider">Scheduled At</th>
+            <th class="p-4 font-normal uppercase tracking-wider text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% episodes.forEach(ep => { %>
+            <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors group">
+              <td class="p-4 font-bold text-white">
+                <div class="flex flex-col">
+                  <span><%= ep.title %></span>
+                  <span class="text-xs text-zinc-500 font-normal"><%= new Date(ep.createdAt).toLocaleDateString() %></span>
+                </div>
+              </td>
+              <td class="p-4">
+                <% if (ep.status === 'PUBLISHED') { %>
+                  <span class="px-2 py-1 bg-green-500/20 text-green-500 text-xs rounded-full uppercase font-bold">Published</span>
+                <% } else if (ep.scheduledAt) { %>
+                  <span class="px-2 py-1 bg-yellow-500/20 text-yellow-500 text-xs rounded-full uppercase font-bold">Scheduled</span>
+                <% } else { %>
+                  <span class="px-2 py-1 bg-zinc-700 text-zinc-300 text-xs rounded-full uppercase font-bold">Draft</span>
+                <% } %>
+              </td>
+              <td class="p-4">
+                <% if (ep.audioUrl) { %>
+                  <a href="<%= ep.audioUrl %>" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 15v-6a2 2 0 00-3.414-1.414l-2 2A2 2 0 014.172 10H3a2 2 0 00-2 2v4a2 2 0 002 2h1.172a2 2 0 011.414.586l2 2A2 2 0 0011 19z"></path></svg>
+                    Has Audio
+                  </a>
+                <% } else { %>
+                  <span class="text-zinc-500 text-sm italic">Missing</span>
+                <% } %>
+              </td>
+              <td class="p-4 text-zinc-400 text-sm">
+                <%= ep.scheduledAt ? new Date(ep.scheduledAt).toLocaleString() : '-' %>
+              </td>
+              <td class="p-4 text-right">
+                <div class="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <a href="/podcaster/episodes/<%= ep.id %>/edit" class="text-zinc-400 hover:text-white transition-colors" title="Edit">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                  </a>
+                  <% if (ep.status === 'DRAFT' && ep.audioUrl) { %>
+                    <form action="/podcaster/episodes/<%= ep.id %>/publish" method="POST" class="m-0 inline-block">
+                      <button type="submit" class="text-green-500 hover:text-green-400 transition-colors" title="Publish Now">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                      </button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="text-center py-20 bg-zinc-800/20 rounded-lg border border-zinc-800 border-dashed">
+      <svg class="w-16 h-16 text-zinc-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+      <h2 class="text-xl font-bold mb-2">No episodes yet</h2>
+      <p class="text-zinc-400 mb-6 max-w-md mx-auto">Upload your first episode to share with the world.</p>
+      <a href="/podcaster/shows/<%= currentShow.id %>/episodes/new" class="bg-white text-black px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform inline-block">
+        Upload Episode
+      </a>
+    </div>
+  <% } %>
+</div>

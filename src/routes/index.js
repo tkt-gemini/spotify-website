@@ -110,7 +110,8 @@ router.get('/app/search', requireAuth, async (req, res) => {
     tracks: [],
     artists: [],
     albums: [],
-    playlists: []
+    playlists: [],
+    podcasts: []
   };
 
   const likeCondition = { status: 'PUBLISHED' };
@@ -155,6 +156,13 @@ router.get('/app/search', requireAuth, async (req, res) => {
     results.playlists = await prisma.playlist.findMany({
       where: { name: { contains: query }, isPublic: true },
       include: { user: true }
+    });
+  }
+
+  if (type === 'all' || type === 'podcast') {
+    results.podcasts = await prisma.podcastShow.findMany({
+      where: { title: { contains: query }, ...likeCondition },
+      include: { owner: true }
     });
   }
 
@@ -245,61 +253,123 @@ router.get('/app/playlists/:playlistId', requireAuth, async (req, res) => {
   });
 });
 
-// Protected Role routes (Placeholder for now)
+// Podcast Routes
+router.get('/app/podcasts/:showId', requireAuth, async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  if (isNaN(showId)) return res.redirect('/app/library');
+
+  const show = await prisma.podcastShow.findUnique({
+    where: { id: showId, status: 'PUBLISHED' },
+    include: {
+      owner: true,
+      episodes: {
+        where: { status: 'PUBLISHED' },
+        orderBy: { createdAt: 'desc' }
+      }
+    }
+  });
+
+  if (!show) return res.redirect('/app/library');
+
+  res.render('pages/user/podcast-detail', {
+    show,
+    layout: 'layouts/user-app'
+  });
+});
+
+router.get('/app/episodes/:episodeId', requireAuth, async (req, res) => {
+  const episodeId = parseInt(req.params.episodeId, 10);
+  if (isNaN(episodeId)) return res.redirect('/app/library');
+
+  const episode = await prisma.podcastEpisode.findUnique({
+    where: { id: episodeId, status: 'PUBLISHED' },
+    include: { show: true }
+  });
+
+  if (!episode || episode.show.status !== 'PUBLISHED') return res.redirect('/app/library');
+
+  res.render('pages/user/episode-detail', {
+    episode,
+    layout: 'layouts/user-app'
+  });
+});
+
 const artistRoutes = require('./artist');
 router.use('/artist', requireAuth, artistRoutes);
 
-router.get('/podcaster/shows', requireAuth, (req, res) => res.render('pages/podcaster/shows', { layout: 'layouts/user-app' }));
+const podcasterRoutes = require('./podcaster');
+router.use('/podcaster', requireAuth, podcasterRoutes);
 
 // API Routes
 router.post('/api/v1/playback/start', requireAuth, async (req, res) => {
   const { entityType, entityId } = req.body;
   
-  if (entityType !== 'track') {
-    return res.status(400).json({ success: false, error: 'Only tracks are supported in Phase 1' });
+  if (entityType !== 'track' && entityType !== 'episode') {
+    return res.status(400).json({ success: false, error: 'Unsupported entity type' });
   }
 
-  const trackId = parseInt(entityId, 10);
-  if (isNaN(trackId)) {
-    return res.status(400).json({ success: false, error: 'Invalid track ID' });
-  }
-
-  const track = await prisma.track.findUnique({
-    where: { id: trackId },
-    include: { artist: true }
-  });
-
-  if (!track) {
-    return res.status(404).json({ success: false, error: 'Track not found' });
-  }
-
-  if (track.status !== 'PUBLISHED') {
-    return res.status(403).json({ success: false, error: 'Track is not available' });
-  }
-
-  if (!track.audioUrl) {
-    return res.status(400).json({ success: false, error: 'Track has no audio URL' });
+  const id = parseInt(entityId, 10);
+  if (isNaN(id)) {
+    return res.status(400).json({ success: false, error: 'Invalid ID' });
   }
 
   const playbackSessionId = crypto.randomUUID();
 
-  await prisma.playbackEvent.create({
-    data: {
-      playbackSessionId,
-      userId: req.session.userId,
-      trackId: track.id,
-      eventType: 'TRACK_STARTED'
-    }
-  });
+  if (entityType === 'track') {
+    const track = await prisma.track.findUnique({
+      where: { id },
+      include: { artist: true }
+    });
 
-  res.json({
-    success: true,
-    playbackSessionId,
-    title: track.title,
-    artistName: track.artist.name,
-    audioUrl: track.audioUrl,
-    coverUrl: track.coverUrl
-  });
+    if (!track) return res.status(404).json({ success: false, error: 'Track not found' });
+    if (track.status !== 'PUBLISHED') return res.status(403).json({ success: false, error: 'Track is not available' });
+    if (!track.audioUrl) return res.status(400).json({ success: false, error: 'Track has no audio URL' });
+
+    await prisma.playbackEvent.create({
+      data: {
+        playbackSessionId,
+        userId: req.session.userId,
+        trackId: track.id,
+        eventType: 'TRACK_STARTED'
+      }
+    });
+
+    return res.json({
+      success: true,
+      playbackSessionId,
+      title: track.title,
+      artistName: track.artist.name,
+      audioUrl: track.audioUrl,
+      coverUrl: track.coverUrl
+    });
+  } else if (entityType === 'episode') {
+    const episode = await prisma.podcastEpisode.findUnique({
+      where: { id },
+      include: { show: true }
+    });
+
+    if (!episode) return res.status(404).json({ success: false, error: 'Episode not found' });
+    if (episode.status !== 'PUBLISHED') return res.status(403).json({ success: false, error: 'Episode is not available' });
+    if (!episode.audioUrl) return res.status(400).json({ success: false, error: 'Episode has no audio URL' });
+
+    await prisma.playbackEvent.create({
+      data: {
+        playbackSessionId,
+        userId: req.session.userId,
+        episodeId: episode.id,
+        eventType: 'EPISODE_STARTED'
+      }
+    });
+
+    return res.json({
+      success: true,
+      playbackSessionId,
+      title: episode.title,
+      artistName: episode.show.title, // subtitle is mapped to artistName in frontend player
+      audioUrl: episode.audioUrl,
+      coverUrl: episode.show.coverUrl // Use show's cover url per requirements
+    });
+  }
 });
 
 // Phase 2 APIs

@@ -25,6 +25,7 @@
       <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=track" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'track' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Songs</a>
       <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=artist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'artist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Artists</a>
       <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=playlist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'playlist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Playlists</a>
+      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=podcast" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'podcast' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Podcasts</a>
     </div>
 
     <% let hasResults = false; %>
@@ -57,6 +58,17 @@
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
           <% results.playlists.forEach(playlist => { %>
             <%- include('../../partials/playlist-card', { playlist }) %>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results && results.podcasts && results.podcasts.length > 0) { hasResults = true; %>
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Podcasts</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <% results.podcasts.forEach(podcast => { %>
+            <%- include('../../partials/podcast-card', { podcast }) %>
           <% }) %>
         </div>
       </div>

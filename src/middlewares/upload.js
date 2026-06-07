@@ -51,4 +51,50 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 } // 100MB
 });
 
-module.exports = upload;
+// Podcaster specific storage
+const podcastCoverStorage = multer.diskStorage({
+  destination: 'uploads/images/covers',
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, crypto.randomUUID() + ext);
+  }
+});
+
+const episodeAudioStorage = multer.diskStorage({
+  destination: 'uploads/audio/episodes',
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    cb(null, crypto.randomUUID() + ext);
+  }
+});
+
+const uploadPodcastShowCover = multer({
+  storage: podcastCoverStorage,
+  fileFilter: (req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid image file type'), false);
+    }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
+const uploadEpisodeAudio = multer({
+  storage: episodeAudioStorage,
+  fileFilter: (req, file, cb) => {
+    const allowed = ['audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/ogg'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid audio file type'), false);
+    }
+  },
+  limits: { fileSize: 300 * 1024 * 1024 } // 300MB
+});
+
+module.exports = {
+  upload,
+  uploadPodcastShowCover,
+  uploadEpisodeAudio
+};

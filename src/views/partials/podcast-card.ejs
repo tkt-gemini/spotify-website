@@ -1,0 +1,15 @@
+<a href="/app/podcasts/<%= podcast.id %>" class="bg-zinc-800/40 hover:bg-zinc-800 p-4 rounded-lg transition-colors group">
+  <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-700">
+    <% if (podcast.coverUrl) { %>
+      <img src="<%= podcast.coverUrl %>" alt="<%= podcast.title %>" class="w-full h-full object-cover">
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center text-zinc-500">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+      </div>
+    <% } %>
+  </div>
+  <h3 class="font-bold text-white truncate"><%= podcast.title %></h3>
+  <p class="text-sm text-zinc-400 mt-1 truncate">
+    <%= podcast.owner ? podcast.owner.name : 'Unknown' %>
+  </p>
+</a>

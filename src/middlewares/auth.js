@@ -78,9 +78,77 @@ function requireArtistRole(allowedRoles = []) {
   };
 }
 
+function requirePodcastRoleByShowId(allowedRoles = []) {
+  return async (req, res, next) => {
+    if (!req.session || !req.session.userId) return res.redirect('/login');
+    
+    const showId = parseInt(req.params.showId, 10);
+    if (isNaN(showId)) return res.status(400).send('Invalid show ID');
+
+    try {
+      const teamMember = await prisma.podcastTeamMember.findUnique({
+        where: { showId_userId: { showId, userId: req.session.userId } }
+      });
+
+      if (!teamMember) {
+        return res.status(403).send('Forbidden: You are not a team member of this show');
+      }
+
+      if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
+        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+      }
+
+      res.locals.showRole = teamMember.role;
+      next();
+    } catch (err) {
+      console.error('Error checking podcast role by showId:', err);
+      return res.status(500).send('Internal Server Error');
+    }
+  };
+}
+
+function requirePodcastRoleByEpisodeId(allowedRoles = []) {
+  return async (req, res, next) => {
+    if (!req.session || !req.session.userId) return res.redirect('/login');
+    
+    const episodeId = parseInt(req.params.episodeId, 10);
+    if (isNaN(episodeId)) return res.status(400).send('Invalid episode ID');
+
+    try {
+      const episode = await prisma.podcastEpisode.findUnique({
+        where: { id: episodeId },
+        select: { showId: true }
+      });
+
+      if (!episode) return res.status(404).send('Episode not found');
+
+      const teamMember = await prisma.podcastTeamMember.findUnique({
+        where: { showId_userId: { showId: episode.showId, userId: req.session.userId } }
+      });
+
+      if (!teamMember) {
+        return res.status(403).send('Forbidden: You are not a team member of this show');
+      }
+
+      if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
+        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+      }
+
+      res.locals.showRole = teamMember.role;
+      req.episodeShowId = episode.showId; // To avoid querying again in the controller
+      next();
+    } catch (err) {
+      console.error('Error checking podcast role by episodeId:', err);
+      return res.status(500).send('Internal Server Error');
+    }
+  };
+}
+
 module.exports = {
   requireAuth,
   requireGuest,
   attachCurrentUserToLocals,
-  requireArtistRole
+  requireArtistRole,
+  requirePodcastRoleByShowId,
+  requirePodcastRoleByEpisodeId
 };

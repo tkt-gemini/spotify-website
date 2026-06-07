@@ -1,0 +1,55 @@
+<div class="mb-8 max-w-5xl mx-auto">
+  <!-- Podcast Header -->
+  <div class="flex items-end gap-6 mb-8 mt-4">
+    <div class="w-48 h-48 shadow-2xl rounded overflow-hidden bg-zinc-800 flex-shrink-0">
+      <% if (show.coverUrl) { %>
+        <img src="<%= show.coverUrl %>" class="w-full h-full object-cover">
+      <% } else { %>
+        <div class="w-full h-full flex items-center justify-center text-zinc-500">
+          <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 00-3.83 19.24A10 10 0 0012 22a10 10 0 000-20zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+        </div>
+      <% } %>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-xs font-bold uppercase tracking-widest text-zinc-300 mb-1">Podcast</span>
+      <h1 class="text-6xl font-extrabold tracking-tighter mb-4"><%= show.title %></h1>
+      <p class="text-zinc-300 mb-2"><%= show.description || 'No description provided.' %></p>
+      <div class="flex items-center text-sm text-zinc-400 font-bold gap-1 mt-2">
+        <span><%= show.owner ? show.owner.name : 'Unknown Podcaster' %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Podcast Episodes -->
+  <div class="bg-zinc-900/50 rounded-lg p-6">
+    <h2 class="text-2xl font-bold mb-6">All Episodes</h2>
+    
+    <% if (show.episodes && show.episodes.length > 0) { %>
+      <div class="flex flex-col gap-4">
+        <% show.episodes.forEach(episode => { %>
+          <div class="bg-zinc-800/40 p-4 rounded-lg hover:bg-zinc-800 transition-colors group flex items-start gap-4">
+            <button class="js-play-entity w-12 h-12 rounded flex-shrink-0 bg-white text-black flex items-center justify-center hover:scale-105 transition-transform" data-entity-type="episode" data-entity-id="<%= episode.id %>" <%= !episode.audioUrl ? 'disabled' : '' %>>
+              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <div class="flex-1 min-w-0">
+              <a href="/app/episodes/<%= episode.id %>" class="font-bold text-white text-lg hover:underline truncate block mb-1">
+                <%= episode.title %>
+              </a>
+              <p class="text-sm text-zinc-400 mb-2 line-clamp-2"><%= episode.description %></p>
+              <div class="flex items-center gap-4 text-xs font-bold text-zinc-500 uppercase">
+                <span><%= new Date(episode.publishedAt || episode.createdAt).toLocaleDateString() %></span>
+                <% if (episode.duration) { %>
+                  <span><%= Math.floor(episode.duration / 60) %> min <%= episode.duration % 60 %> sec</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="text-center py-12">
+        <p class="text-zinc-500">No episodes available yet.</p>
+      </div>
+    <% } %>
+  </div>
+</div>
