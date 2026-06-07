@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  passwordHash       String
+  name               String
+  defaultRole        Role                @default(USER) // Dùng để chọn landing page
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  createdArtists     Artist[]            @relation("ArtistCreator")
+  podcasterShows     PodcastShow[]       @relation("ShowOwner")
+  mediaAssets        MediaAsset[]
+
+  playlists          Playlist[]
+  likedTracks        LikedTrack[]
+  followedArtists    FollowedArtist[]
+  followedPlaylists  FollowedPlaylist[]
+  savedAlbums        SavedAlbum[]
+  subscribedShows    SubscribedShow[]
+  playbackEvents     PlaybackEvent[]
+  notifications      Notification[]
+  artistTeamMembers  ArtistTeamMember[]
+  podcastTeamMembers PodcastTeamMember[]
+}
+
+enum Role {
+  ADMIN
+  USER
+  ARTIST
+  PODCASTER
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+  ARCHIVED
+  REMOVED
+}
+
+enum TeamRole {
+  OWNER
+  MANAGER
+  ADMIN
+  EDITOR
+  PRODUCER
+  VIEWER
+}
+
+enum MediaType {
+  IMAGE
+  AUDIO
+  VIDEO
+}
+
+enum PlaybackEventType {
+  TRACK_STARTED
+  TRACK_PROGRESS
+  TRACK_COMPLETED
+  EPISODE_STARTED
+  EPISODE_PROGRESS
+  EPISODE_COMPLETED
+}
+
+model Artist {
+  id          Int                @id @default(autoincrement())
+  name        String
+  bio         String?
+  avatarUrl   String?
+  bannerUrl   String?
+  status      ContentStatus      @default(DRAFT)
+  createdById Int?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  createdBy   User?              @relation("ArtistCreator", fields: [createdById], references: [id])
+  albums      Album[]
+  tracks      Track[]
+  followers   FollowedArtist[]
+  teamMembers ArtistTeamMember[]
+}
+
+model ArtistTeamMember {
+  id        Int      @id @default(autoincrement())
+  artistId  Int
+  userId    Int
+  role      TeamRole
+  createdAt DateTime @default(now())
+
+  artist    Artist   @relation(fields: [artistId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([artistId, userId])
+}
+
+model Album {
+  id          Int           @id @default(autoincrement())
+  artistId    Int
+  title       String
+  coverUrl    String?
+  releaseDate DateTime?     @default(now())
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  artist      Artist        @relation(fields: [artistId], references: [id])
+  tracks      Track[]
+  savedBy     SavedAlbum[]
+}
+
+model Track {
+  id             Int              @id @default(autoincrement())
+  artistId       Int
+  albumId        Int?
+  title          String
+  duration       Int?             // in seconds
+  audioUrl       String?
+  coverUrl       String?
+  trackNumber    Int?
+  status         ContentStatus    @default(DRAFT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  artist         Artist           @relation(fields: [artistId], references: [id])
+  album          Album?           @relation(fields: [albumId], references: [id])
+  playlistTracks PlaylistTrack[]
+  likedBy        LikedTrack[]
+  playbackEvents PlaybackEvent[]
+}
+
+model Playlist {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  name        String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  tracks      PlaylistTrack[]
+  followers   FollowedPlaylist[]
+}
+
+model PlaylistTrack {
+  id         Int      @id @default(autoincrement())
+  playlistId Int
+  trackId    Int
+  addedAt    DateTime @default(now())
+
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  track      Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([playlistId, trackId])
+}
+
+model LikedTrack {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  trackId   Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  track     Track    @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId])
+}
+
+model FollowedArtist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  artistId  Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  artist    Artist   @relation(fields: [artistId], references: [id])
+
+  @@unique([userId, artistId])
+}
+
+model FollowedPlaylist {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  playlistId Int
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+
+  @@unique([userId, playlistId])
+}
+
+model SavedAlbum {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  albumId   Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  album     Album    @relation(fields: [albumId], references: [id])
+
+  @@unique([userId, albumId])
+}
+
+model PodcastShow {
+  id          Int                 @id @default(autoincrement())
+  ownerId     Int
+  title       String
+  description String?
+  coverUrl    String?
+  status      ContentStatus       @default(DRAFT)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  owner       User                @relation("ShowOwner", fields: [ownerId], references: [id])
+  episodes    PodcastEpisode[]
+  subscribers SubscribedShow[]
+  teamMembers PodcastTeamMember[]
+}
+
+model PodcastEpisode {
+  id             Int              @id @default(autoincrement())
+  showId         Int
+  title          String
+  description    String?
+  duration       Int?
+  audioUrl       String?
+  publishedAt    DateTime?
+  scheduledAt    DateTime?
+  status         ContentStatus    @default(DRAFT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  show           PodcastShow      @relation(fields: [showId], references: [id])
+  playbackEvents PlaybackEvent[]
+}
+
+model PodcastTeamMember {
+  id        Int      @id @default(autoincrement())
+  showId    Int
+  userId    Int
+  role      TeamRole
+  createdAt DateTime @default(now())
+
+  show      PodcastShow @relation(fields: [showId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@unique([showId, userId])
+}
+
+model SubscribedShow {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  showId    Int
+  createdAt DateTime    @default(now())
+
+  user      User        @relation(fields: [userId], references: [id])
+  show      PodcastShow @relation(fields: [showId], references: [id])
+
+  @@unique([userId, showId])
+}
+
+model MediaAsset {
+  id               Int       @id @default(autoincrement())
+  ownerUserId      Int?
+  originalFilename String
+  filename         String
+  mimeType         String
+  sizeBytes        Int
+  localPath        String
+  publicUrl        String
+  type             MediaType
+  durationMs       Int?
+  createdAt        DateTime  @default(now())
+
+  ownerUser        User?     @relation(fields: [ownerUserId], references: [id])
+}
+
+model PlaybackEvent {
+  id                Int               @id @default(autoincrement())
+  playbackSessionId String
+  userId            Int?
+  trackId           Int?
+  episodeId         Int?
+  eventType         PlaybackEventType
+  playedAt          DateTime          @default(now())
+  durationMs        Int?
+
+  user              User?             @relation(fields: [userId], references: [id])
+  track             Track?            @relation(fields: [trackId], references: [id])
+  episode           PodcastEpisode?   @relation(fields: [episodeId], references: [id])
+
+  @@index([playbackSessionId])
+  @@index([eventType])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  content   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
