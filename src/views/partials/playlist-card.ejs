@@ -1,0 +1,18 @@
+<a href="/app/playlists/<%= playlist.id %>" class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col block">
+  <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
+    <% if (playlist.coverUrl) { %>
+      <img src="<%= playlist.coverUrl %>" alt="<%= playlist.name %>" class="w-full h-full object-cover">
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center text-zinc-700">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+    <% } %>
+  </div>
+  
+  <div class="flex flex-col flex-1">
+    <h3 class="font-bold text-white truncate"><%= playlist.name %></h3>
+    <p class="text-sm text-zinc-400 truncate mt-1">
+      By <%= playlist.user ? playlist.user.name : 'User' %>
+    </p>
+  </div>
+</a>

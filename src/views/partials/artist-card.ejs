@@ -1,0 +1,20 @@
+<div class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col items-center text-center">
+  <div class="w-32 h-32 rounded-full overflow-hidden bg-zinc-900 mb-4 shadow-lg">
+    <% if (artist.avatarUrl) { %>
+      <img src="<%= artist.avatarUrl %>" alt="<%= artist.name %>" class="w-full h-full object-cover">
+    <% } else { %>
+      <div class="w-full h-full flex items-center justify-center text-zinc-700">
+        <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+    <% } %>
+  </div>
+  
+  <h3 class="font-bold text-white truncate w-full px-2"><%= artist.name %></h3>
+  <span class="text-xs text-zinc-400 mt-1 uppercase tracking-wider font-semibold">Artist</span>
+
+  <div class="mt-4 w-full">
+    <button class="js-follow-artist w-full py-2 rounded-full text-sm font-bold border transition-colors <%= artist.isFollowed ? 'border-zinc-500 text-white hover:border-white' : 'border-white text-white hover:scale-105' %>" data-artist-id="<%= artist.id %>" data-followed="<%= artist.isFollowed ? 'true' : 'false' %>">
+      <%= artist.isFollowed ? 'Following' : 'Follow' %>
+    </button>
+  </div>
+</div>

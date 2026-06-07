@@ -97,12 +97,152 @@ router.get('/app/home', requireAuth, async (req, res) => {
   res.render('pages/user/home', { tracks, layout: 'layouts/user-app' });
 });
 
-router.get('/app/search', requireAuth, (req, res) => {
-  res.render('pages/user/search', { layout: 'layouts/user-app' });
+router.get('/app/search', requireAuth, async (req, res) => {
+  const { q, type = 'all' } = req.query;
+  const userId = req.session.userId;
+  
+  if (!q || q.trim() === '') {
+    return res.render('pages/user/search', { q: '', type, results: null, layout: 'layouts/user-app' });
+  }
+
+  const query = q.trim();
+  const results = {
+    tracks: [],
+    artists: [],
+    albums: [],
+    playlists: []
+  };
+
+  const likeCondition = { status: 'PUBLISHED' };
+
+  if (type === 'all' || type === 'track') {
+    const tracks = await prisma.track.findMany({
+      where: { title: { contains: query }, ...likeCondition },
+      include: { artist: true, album: true }
+    });
+    
+    if (tracks.length > 0) {
+      const liked = await prisma.likedTrack.findMany({
+        where: { userId, trackId: { in: tracks.map(t => t.id) } }
+      });
+      const likedIds = new Set(liked.map(l => l.trackId));
+      results.tracks = tracks.map(t => ({ ...t, isLiked: likedIds.has(t.id) }));
+    }
+  }
+
+  if (type === 'all' || type === 'artist') {
+    const artists = await prisma.artist.findMany({
+      where: { name: { contains: query }, ...likeCondition }
+    });
+    
+    if (artists.length > 0) {
+      const followed = await prisma.followedArtist.findMany({
+        where: { userId, artistId: { in: artists.map(a => a.id) } }
+      });
+      const followedIds = new Set(followed.map(f => f.artistId));
+      results.artists = artists.map(a => ({ ...a, isFollowed: followedIds.has(a.id) }));
+    }
+  }
+
+  if (type === 'all' || type === 'album') {
+    results.albums = await prisma.album.findMany({
+      where: { title: { contains: query }, ...likeCondition },
+      include: { artist: true }
+    });
+  }
+
+  if (type === 'all' || type === 'playlist') {
+    results.playlists = await prisma.playlist.findMany({
+      where: { name: { contains: query }, isPublic: true },
+      include: { user: true }
+    });
+  }
+
+  res.render('pages/user/search', { q: query, type, results, layout: 'layouts/user-app' });
 });
 
-router.get('/app/library', requireAuth, (req, res) => {
-  res.render('pages/user/library', { layout: 'layouts/user-app' });
+router.get('/app/library', requireAuth, async (req, res) => {
+  const userId = req.session.userId;
+  
+  const [playlists, likedTracks, followedArtists, followedPlaylists, savedAlbums, subscribedShows] = await Promise.all([
+    prisma.playlist.findMany({ where: { userId } }),
+    prisma.likedTrack.findMany({ where: { userId }, include: { track: { include: { artist: true, album: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.followedArtist.findMany({ where: { userId }, include: { artist: true }, orderBy: { createdAt: 'desc' } }),
+    prisma.followedPlaylist.findMany({ where: { userId }, include: { playlist: { include: { user: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.savedAlbum.findMany({ where: { userId }, include: { album: { include: { artist: true } } }, orderBy: { createdAt: 'desc' } }),
+    prisma.subscribedShow.findMany({ where: { userId }, include: { show: true }, orderBy: { createdAt: 'desc' } })
+  ]);
+
+  res.render('pages/user/library', {
+    playlists,
+    likedTracks,
+    followedArtists,
+    followedPlaylists,
+    savedAlbums,
+    subscribedShows,
+    layout: 'layouts/user-app'
+  });
+});
+
+// Playlist Routes
+router.post('/app/playlists', requireAuth, async (req, res) => {
+  const userId = req.session.userId;
+  const name = `My Playlist #${Math.floor(Math.random() * 10000)}`;
+  const playlist = await prisma.playlist.create({
+    data: {
+      userId,
+      name,
+      isPublic: false
+    }
+  });
+  res.redirect(`/app/playlists/${playlist.id}`);
+});
+
+router.get('/app/playlists/:playlistId', requireAuth, async (req, res) => {
+  const playlistId = parseInt(req.params.playlistId, 10);
+  if (isNaN(playlistId)) return res.redirect('/app/library');
+
+  const playlist = await prisma.playlist.findUnique({
+    where: { id: playlistId },
+    include: {
+      user: true,
+      tracks: {
+        include: {
+          track: {
+            include: { artist: true, album: true }
+          }
+        },
+        orderBy: { addedAt: 'asc' }
+      }
+    }
+  });
+
+  if (!playlist) return res.redirect('/app/library');
+
+  const isOwner = playlist.userId === req.session.userId;
+  if (!playlist.isPublic && !isOwner) {
+    return res.redirect('/app/library');
+  }
+
+  // If owner, get published tracks to add
+  let availableTracks = [];
+  if (isOwner) {
+    const existingTrackIds = playlist.tracks.map(pt => pt.trackId);
+    availableTracks = await prisma.track.findMany({
+      where: {
+        status: 'PUBLISHED',
+        id: { notIn: existingTrackIds }
+      },
+      include: { artist: true }
+    });
+  }
+
+  res.render('pages/user/playlist-detail', {
+    playlist,
+    isOwner,
+    availableTracks,
+    layout: 'layouts/user-app'
+  });
 });
 
 // Protected Role routes (Placeholder for now)
@@ -158,6 +298,107 @@ router.post('/api/v1/playback/start', requireAuth, async (req, res) => {
     audioUrl: track.audioUrl,
     coverUrl: track.coverUrl
   });
+});
+
+// Phase 2 APIs
+router.post('/api/v1/me/library/tracks/:trackId', requireAuth, async (req, res) => {
+  const trackId = parseInt(req.params.trackId, 10);
+  if (isNaN(trackId)) return res.status(400).json({ success: false });
+  
+  const track = await prisma.track.findUnique({ where: { id: trackId } });
+  if (!track || track.status !== 'PUBLISHED') return res.status(400).json({ success: false });
+
+  await prisma.likedTrack.upsert({
+    where: { userId_trackId: { userId: req.session.userId, trackId } },
+    update: {},
+    create: { userId: req.session.userId, trackId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.delete('/api/v1/me/library/tracks/:trackId', requireAuth, async (req, res) => {
+  const trackId = parseInt(req.params.trackId, 10);
+  if (isNaN(trackId)) return res.status(400).json({ success: false });
+  
+  await prisma.likedTrack.deleteMany({
+    where: { userId: req.session.userId, trackId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.post('/api/v1/me/follow/artists/:artistId', requireAuth, async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  if (isNaN(artistId)) return res.status(400).json({ success: false });
+  
+  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+  if (!artist || artist.status !== 'PUBLISHED') return res.status(400).json({ success: false });
+
+  await prisma.followedArtist.upsert({
+    where: { userId_artistId: { userId: req.session.userId, artistId } },
+    update: {},
+    create: { userId: req.session.userId, artistId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.delete('/api/v1/me/follow/artists/:artistId', requireAuth, async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  if (isNaN(artistId)) return res.status(400).json({ success: false });
+  
+  await prisma.followedArtist.deleteMany({
+    where: { userId: req.session.userId, artistId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.post('/api/v1/playlists/:playlistId/tracks', requireAuth, async (req, res) => {
+  const playlistId = parseInt(req.params.playlistId, 10);
+  const { trackId } = req.body;
+  const parsedTrackId = parseInt(trackId, 10);
+  
+  if (isNaN(playlistId) || isNaN(parsedTrackId)) return res.status(400).json({ success: false });
+
+  const playlist = await prisma.playlist.findUnique({ where: { id: playlistId } });
+  if (!playlist || playlist.userId !== req.session.userId) {
+    return res.status(403).json({ success: false, error: 'Not authorized' });
+  }
+
+  const track = await prisma.track.findUnique({ where: { id: parsedTrackId } });
+  if (!track || track.status !== 'PUBLISHED') return res.status(400).json({ success: false });
+
+  await prisma.playlistTrack.upsert({
+    where: { playlistId_trackId: { playlistId, trackId: parsedTrackId } },
+    update: {},
+    create: { playlistId, trackId: parsedTrackId }
+  });
+
+  res.json({ success: true });
+});
+
+router.delete('/api/v1/playlists/:playlistId/tracks/:playlistTrackId', requireAuth, async (req, res) => {
+  const playlistId = parseInt(req.params.playlistId, 10);
+  const playlistTrackId = parseInt(req.params.playlistTrackId, 10);
+  
+  if (isNaN(playlistId) || isNaN(playlistTrackId)) return res.status(400).json({ success: false });
+
+  const playlist = await prisma.playlist.findUnique({ where: { id: playlistId } });
+  if (!playlist || playlist.userId !== req.session.userId) {
+    return res.status(403).json({ success: false, error: 'Not authorized' });
+  }
+
+  // Ensure this playlistTrack actually belongs to this playlist before deleting
+  await prisma.playlistTrack.deleteMany({
+    where: {
+      id: playlistTrackId,
+      playlistId
+    }
+  });
+
+  res.json({ success: true });
 });
 
 module.exports = router;

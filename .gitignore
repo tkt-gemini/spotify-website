@@ -8,3 +8,5 @@ uploads/video/*
 !uploads/video/.gitkeep
 .DS_Store
 cookies*.txt
+test-*.js
+*.log

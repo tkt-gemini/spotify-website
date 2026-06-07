@@ -1,0 +1,65 @@
+<div class="flex items-center gap-4 p-2 rounded hover:bg-zinc-800/50 group transition-colors group-track-row">
+  <!-- Play Button / Order -->
+  <div class="w-8 flex items-center justify-center text-zinc-400">
+    <span class="block group-hover:hidden group-track-row:hover:hidden">
+      <%= typeof index !== 'undefined' ? index : '' %>
+    </span>
+    <% if (track.audioUrl) { %>
+      <button class="js-play-entity hidden group-hover:block group-track-row:hover:block text-white hover:scale-105" data-entity-type="track" data-entity-id="<%= track.id %>">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+    <% } else { %>
+      <button class="hidden group-hover:block group-track-row:hover:block text-zinc-500 cursor-not-allowed" title="Chưa có audio" disabled>
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+      </button>
+    <% } %>
+  </div>
+
+  <!-- Track Info -->
+  <div class="flex flex-col flex-1 truncate">
+    <span class="text-white font-bold truncate"><%= track.title %></span>
+    <span class="text-sm text-zinc-400 truncate">
+      <%= track.artist ? track.artist.name : 'Unknown Artist' %>
+    </span>
+  </div>
+
+  <!-- Album Info (Optional) -->
+  <% if (typeof showAlbum !== 'undefined' && showAlbum && track.album) { %>
+    <div class="hidden md:flex flex-1 text-sm text-zinc-400 truncate">
+      <%= track.album.title %>
+    </div>
+  <% } %>
+
+  <!-- Like Action -->
+  <div class="w-12 flex justify-center">
+    <button class="js-like-track text-zinc-400 hover:text-white transition-colors" data-track-id="<%= track.id %>" data-liked="<%= track.isLiked ? 'true' : 'false' %>">
+      <svg class="w-5 h-5 <%= track.isLiked ? 'text-green-500 fill-current' : 'fill-none stroke-current stroke-2' %>" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+      </svg>
+    </button>
+  </div>
+  
+  <!-- Add/Remove Playlist Action (Optional) -->
+  <% if (typeof playlistAction !== 'undefined' && playlistAction === 'remove') { %>
+    <div class="w-12 flex justify-center">
+      <button class="js-remove-playlist-track text-zinc-400 hover:text-red-500 transition-colors" data-playlist-id="<%= playlistId %>" data-playlist-track-id="<%= playlistTrackId %>" title="Remove from playlist">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+      </button>
+    </div>
+  <% } else if (typeof playlistAction !== 'undefined' && playlistAction === 'add') { %>
+    <div class="w-24 flex justify-center">
+      <button class="js-add-playlist-track border border-zinc-400 text-zinc-400 text-xs px-3 py-1 rounded-full hover:border-white hover:text-white transition-colors" data-playlist-id="<%= playlistId %>" data-track-id="<%= track.id %>">
+        Add
+      </button>
+    </div>
+  <% } %>
+
+  <!-- Duration -->
+  <div class="w-12 text-sm text-zinc-400 text-right">
+    <% if (track.duration) { %>
+      <%= Math.floor(track.duration / 60) %>:<%= (track.duration % 60).toString().padStart(2, '0') %>
+    <% } else { %>
+      --:--
+    <% } %>
+  </div>
+</div>

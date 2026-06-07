@@ -1,0 +1,79 @@
+<div class="mb-8 max-w-5xl mx-auto">
+  <!-- Playlist Header -->
+  <div class="flex items-end gap-6 mb-8 mt-4">
+    <div class="w-48 h-48 shadow-2xl rounded overflow-hidden bg-zinc-800 flex-shrink-0">
+      <% if (playlist.coverUrl) { %>
+        <img src="<%= playlist.coverUrl %>" class="w-full h-full object-cover">
+      <% } else { %>
+        <div class="w-full h-full flex items-center justify-center text-zinc-600">
+          <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+        </div>
+      <% } %>
+    </div>
+    <div class="flex flex-col gap-2">
+      <span class="text-sm font-bold uppercase tracking-wider">Playlist</span>
+      <h1 class="text-5xl font-extrabold text-white mb-2"><%= playlist.name %></h1>
+      <% if (playlist.description) { %>
+        <p class="text-zinc-400 text-sm"><%= playlist.description %></p>
+      <% } %>
+      <div class="text-sm text-zinc-400 mt-2 flex items-center gap-2">
+        <span class="font-bold text-white"><%= playlist.user.name %></span>
+        <span>•</span>
+        <span><%= playlist.tracks.length %> songs</span>
+        <% if (playlist.isPublic) { %>
+          <span class="px-2 py-0.5 border border-zinc-500 rounded text-xs ml-2">Public</span>
+        <% } else { %>
+          <span class="px-2 py-0.5 border border-zinc-500 rounded text-xs ml-2">Private</span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tracks Header -->
+  <% if (playlist.tracks && playlist.tracks.length > 0) { %>
+    <div class="flex text-sm text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2 mb-4 px-2 gap-4">
+      <div class="w-8 text-center">#</div>
+      <div class="flex-1">Title</div>
+      <div class="w-12 text-center"><svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+    </div>
+
+    <!-- Playlist Tracks -->
+    <div class="flex flex-col gap-1 mb-12">
+      <% playlist.tracks.forEach((pt, idx) => { %>
+        <%- include('../../partials/track-row', { 
+            track: pt.track, 
+            index: idx + 1, 
+            showAlbum: false,
+            playlistAction: isOwner ? 'remove' : null,
+            playlistId: playlist.id,
+            playlistTrackId: pt.id
+        }) %>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="mb-12">
+      <%- include('../../partials/empty-state', { title: 'No songs here yet', message: isOwner ? 'Find songs to add to your playlist.' : '' }) %>
+    </div>
+  <% } %>
+
+  <!-- Add Tracks Section (Owner Only) -->
+  <% if (isOwner) { %>
+    <div class="border-t border-zinc-800 pt-8">
+      <h2 class="text-xl font-bold mb-4">Let's find something for your playlist</h2>
+      <% if (availableTracks && availableTracks.length > 0) { %>
+        <div class="flex flex-col gap-1">
+          <% availableTracks.forEach((track) => { %>
+            <%- include('../../partials/track-row', { 
+                track: track, 
+                showAlbum: false,
+                playlistAction: 'add',
+                playlistId: playlist.id
+            }) %>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <p class="text-zinc-400">All available tracks are already in this playlist!</p>
+      <% } %>
+    </div>
+  <% } %>
+</div>

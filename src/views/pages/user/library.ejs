@@ -1,1 +1,92 @@
-<h1 class="text-3xl">Library</h1>
+<div class="mb-8 max-w-5xl mx-auto">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold">Your Library</h1>
+    <form action="/app/playlists" method="POST" class="m-0">
+      <button type="submit" class="bg-white text-black font-bold px-4 py-2 rounded-full hover:scale-105 transition-transform text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Create Playlist
+      </button>
+    </form>
+  </div>
+
+  <!-- Playlists Section -->
+  <div class="mb-10">
+    <h2 class="text-xl font-bold mb-4">Playlists</h2>
+    <% if (playlists && playlists.length > 0) { %>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% playlists.forEach(playlist => { %>
+          <%- include('../../partials/playlist-card', { playlist }) %>
+        <% }) %>
+        <% if (followedPlaylists && followedPlaylists.length > 0) { %>
+          <% followedPlaylists.forEach(fp => { %>
+            <%- include('../../partials/playlist-card', { playlist: fp.playlist }) %>
+          <% }) %>
+        <% } %>
+      </div>
+    <% } else if (followedPlaylists && followedPlaylists.length > 0) { %>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% followedPlaylists.forEach(fp => { %>
+          <%- include('../../partials/playlist-card', { playlist: fp.playlist }) %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { title: 'Create your first playlist', message: 'It\'s easy, we\'ll help you.' }) %>
+    <% } %>
+  </div>
+
+  <!-- Artists Section -->
+  <div class="mb-10">
+    <h2 class="text-xl font-bold mb-4">Artists</h2>
+    <% if (followedArtists && followedArtists.length > 0) { %>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% followedArtists.forEach(fa => { %>
+          <% fa.artist.isFollowed = true; %>
+          <%- include('../../partials/artist-card', { artist: fa.artist }) %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { title: 'Follow your first artist', message: 'Follow artists you like by finding them in search.' }) %>
+    <% } %>
+  </div>
+
+  <!-- Liked Songs Section -->
+  <div class="mb-10">
+    <h2 class="text-xl font-bold mb-4">Liked Songs</h2>
+    <% if (likedTracks && likedTracks.length > 0) { %>
+      <div class="flex flex-col gap-1">
+        <% likedTracks.forEach((lt, idx) => { %>
+          <% lt.track.isLiked = true; %>
+          <%- include('../../partials/track-row', { track: lt.track, index: idx + 1, showAlbum: true }) %>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { title: 'Songs you like will appear here', message: 'Save songs by tapping the heart icon.' }) %>
+    <% } %>
+  </div>
+
+  <!-- Saved Albums Section -->
+  <div class="mb-10">
+    <h2 class="text-xl font-bold mb-4">Albums</h2>
+    <% if (savedAlbums && savedAlbums.length > 0) { %>
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+        <% savedAlbums.forEach(sa => { %>
+          <div class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col">
+            <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
+              <% if (sa.album.coverUrl) { %>
+                <img src="<%= sa.album.coverUrl %>" class="w-full h-full object-cover">
+              <% } else { %>
+                <div class="w-full h-full flex items-center justify-center text-zinc-700">
+                  <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                </div>
+              <% } %>
+            </div>
+            <h3 class="font-bold text-white truncate"><%= sa.album.title %></h3>
+            <p class="text-sm text-zinc-400 truncate mt-1"><%= sa.album.artist.name %></p>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <%- include('../../partials/empty-state', { title: 'Save your favorite albums', message: 'Save albums you like by finding them in search.' }) %>
+    <% } %>
+  </div>
+</div>

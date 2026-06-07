@@ -1,1 +1,69 @@
-<h1 class="text-3xl">User Search</h1>
+<div class="mb-8 max-w-5xl mx-auto">
+  <div class="mb-8">
+    <form action="/app/search" method="GET" class="relative">
+      <input type="text" name="q" value="<%= typeof q !== 'undefined' ? q : '' %>" placeholder="What do you want to listen to?" class="w-full max-w-sm rounded-full py-3 px-12 bg-zinc-800 text-white placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-white transition-shadow" autocomplete="off">
+      <svg class="w-6 h-6 text-zinc-400 absolute left-4 top-3" fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <% if (typeof type !== 'undefined' && type !== 'all') { %>
+        <input type="hidden" name="type" value="<%= type %>">
+      <% } %>
+    </form>
+  </div>
+
+  <% if (typeof q === 'undefined' || q === '') { %>
+    <!-- Browse State -->
+    <h1 class="text-2xl font-bold mb-6">Browse all</h1>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+      <div class="bg-red-500 rounded-lg p-4 aspect-square shadow-md"><span class="font-bold text-xl">Podcasts</span></div>
+      <div class="bg-blue-500 rounded-lg p-4 aspect-square shadow-md"><span class="font-bold text-xl">Live Events</span></div>
+      <div class="bg-purple-500 rounded-lg p-4 aspect-square shadow-md"><span class="font-bold text-xl">Made For You</span></div>
+      <div class="bg-green-500 rounded-lg p-4 aspect-square shadow-md"><span class="font-bold text-xl">New Releases</span></div>
+    </div>
+  <% } else { %>
+    <!-- Search Results -->
+    <div class="flex gap-2 mb-8">
+      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=all" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'all' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">All</a>
+      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=track" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'track' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Songs</a>
+      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=artist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'artist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Artists</a>
+      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=playlist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'playlist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Playlists</a>
+    </div>
+
+    <% let hasResults = false; %>
+
+    <% if (results && results.tracks && results.tracks.length > 0) { hasResults = true; %>
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Songs</h2>
+        <div class="flex flex-col gap-1">
+          <% results.tracks.forEach((track, idx) => { %>
+            <%- include('../../partials/track-row', { track: track, index: idx + 1, showAlbum: true }) %>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results && results.artists && results.artists.length > 0) { hasResults = true; %>
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Artists</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <% results.artists.forEach(artist => { %>
+            <%- include('../../partials/artist-card', { artist }) %>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (results && results.playlists && results.playlists.length > 0) { hasResults = true; %>
+      <div class="mb-8">
+        <h2 class="text-xl font-bold mb-4">Playlists</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          <% results.playlists.forEach(playlist => { %>
+            <%- include('../../partials/playlist-card', { playlist }) %>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (!hasResults) { %>
+      <%- include('../../partials/empty-state', { title: 'No results found', message: `No results found for "${q}". Please make sure your words are spelled correctly or use less or different keywords.` }) %>
+    <% } %>
+  <% } %>
+</div>
