@@ -1,1 +1,52 @@
-<h1 class="text-3xl">User Home</h1>
+<div class="mb-8">
+  <h1 class="text-3xl font-bold mb-6">Good evening</h1>
+
+  <% if (tracks && tracks.length > 0) { %>
+    <h2 class="text-xl font-bold mb-4">Recently Published Tracks</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <% tracks.forEach(track => { %>
+        <div class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col">
+          <!-- Cover -->
+          <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
+            <% if (track.coverUrl) { %>
+              <img src="<%= track.coverUrl %>" alt="<%= track.title %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <div class="w-full h-full flex items-center justify-center text-zinc-700">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+              </div>
+            <% } %>
+
+            <!-- Play Button Overlay -->
+            <% if (track.audioUrl) { %>
+              <button class="js-play-entity absolute right-2 bottom-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-black opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all hover:scale-105 hover:bg-green-400 shadow-xl" data-entity-type="track" data-entity-id="<%= track.id %>">
+                <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            <% } else { %>
+              <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span class="text-xs font-bold text-white uppercase px-2 py-1 border border-white rounded">No Audio</span>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Info -->
+          <div class="flex flex-col flex-1">
+            <h3 class="font-bold text-white truncate"><%= track.title %></h3>
+            <p class="text-sm text-zinc-400 truncate mt-1">
+              <% if (track.artist) { %>
+                <%= track.artist.name %>
+              <% } else { %>
+                Unknown Artist
+              <% } %>
+            </p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="bg-zinc-800/30 border border-zinc-700/50 rounded-lg p-12 text-center flex flex-col items-center justify-center h-64">
+      <svg class="w-16 h-16 text-zinc-600 mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+      <h2 class="text-xl font-bold text-white mb-2">Chưa có bài hát nào</h2>
+      <p class="text-zinc-400">Bạn chưa có track nào được PUBLISHED. Hãy chờ podcaster hoặc artist tải lên nhé.</p>
+    </div>
+  <% } %>
+</div>

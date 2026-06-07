@@ -1,0 +1,39 @@
+<header class="h-16 flex items-center justify-between px-6 bg-zinc-900/90 sticky top-0 z-10">
+  <div class="flex gap-2">
+    <!-- Back/Forward nav arrows can go here -->
+    <div class="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center cursor-pointer">
+      <svg class="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+    </div>
+    <div class="w-8 h-8 rounded-full bg-black/50 flex items-center justify-center cursor-pointer">
+      <svg class="w-5 h-5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <% if (currentUser) { %>
+      <div class="relative group cursor-pointer">
+        <div class="flex items-center gap-2 bg-black p-1 pr-3 rounded-full hover:bg-zinc-800 transition-colors">
+          <div class="w-7 h-7 bg-zinc-700 rounded-full flex items-center justify-center">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <span class="text-sm font-bold truncate max-w-[100px]"><%= currentUser.name %></span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        
+        <!-- Dropdown menu -->
+        <div class="absolute right-0 mt-2 w-48 bg-zinc-800 rounded shadow-xl hidden group-hover:block z-50">
+          <ul class="py-1">
+            <li><a href="#" class="block px-4 py-2 text-sm hover:bg-zinc-700 transition-colors">Profile</a></li>
+            <li><a href="/artist/select" class="block px-4 py-2 text-sm hover:bg-zinc-700 transition-colors">Artist Dashboard</a></li>
+            <li><a href="/podcaster/shows" class="block px-4 py-2 text-sm hover:bg-zinc-700 transition-colors">Podcaster Dashboard</a></li>
+            <li class="border-t border-zinc-700">
+              <form action="/logout" method="POST" class="m-0">
+                <button type="submit" class="w-full text-left block px-4 py-2 text-sm hover:bg-zinc-700 transition-colors">Log out</button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</header>

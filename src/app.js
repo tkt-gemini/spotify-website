@@ -3,6 +3,7 @@ const session = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const routes = require('./routes');
+const { attachCurrentUserToLocals } = require('./middlewares/auth');
 
 const app = express();
 
@@ -30,6 +31,9 @@ app.use(session({
     maxAge: 1000 * 60 * 60 * 24 // 1 day
   }
 }));
+
+// Current user middleware
+app.use(attachCurrentUserToLocals);
 
 // Routes
 app.use('/', routes);

@@ -7,3 +7,4 @@ uploads/audio/*
 uploads/video/*
 !uploads/video/.gitkeep
 .DS_Store
+cookies*.txt
