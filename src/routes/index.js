@@ -246,7 +246,9 @@ router.get('/app/playlists/:playlistId', requireAuth, async (req, res) => {
 });
 
 // Protected Role routes (Placeholder for now)
-router.get('/artist/select', requireAuth, (req, res) => res.render('pages/artist/select', { layout: 'layouts/user-app' }));
+const artistRoutes = require('./artist');
+router.use('/artist', requireAuth, artistRoutes);
+
 router.get('/podcaster/shows', requireAuth, (req, res) => res.render('pages/podcaster/shows', { layout: 'layouts/user-app' }));
 
 // API Routes

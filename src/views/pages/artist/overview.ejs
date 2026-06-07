@@ -1,0 +1,94 @@
+<div class="max-w-5xl mx-auto">
+  <!-- Banner & Info -->
+  <div class="relative h-64 rounded-xl overflow-hidden bg-zinc-800 mb-8">
+    <% if (currentArtist.bannerUrl) { %>
+      <img src="<%= currentArtist.bannerUrl %>" class="w-full h-full object-cover opacity-50">
+    <% } else { %>
+      <div class="w-full h-full bg-gradient-to-br from-zinc-800 to-black"></div>
+    <% } %>
+    
+    <div class="absolute bottom-0 left-0 p-8 flex items-end gap-6">
+      <div class="w-32 h-32 rounded-full overflow-hidden shadow-2xl bg-zinc-700">
+        <% if (currentArtist.avatarUrl) { %>
+          <img src="<%= currentArtist.avatarUrl %>" class="w-full h-full object-cover">
+        <% } %>
+      </div>
+      <div>
+        <span class="text-xs font-bold uppercase tracking-widest text-zinc-300">Artist Profile</span>
+        <h1 class="text-5xl font-extrabold text-white mt-1 mb-2"><%= currentArtist.name %></h1>
+        <p class="text-zinc-300"><%= currentArtist.bio || 'No bio provided.' %></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="bg-zinc-800/50 p-6 rounded-lg">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Tracks</h3>
+      <p class="text-4xl font-bold"><%= totalTracks %></p>
+    </div>
+    <div class="bg-zinc-800/50 p-6 rounded-lg">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Published Tracks</h3>
+      <p class="text-4xl font-bold text-green-500"><%= publishedTracks %></p>
+    </div>
+    <div class="bg-zinc-800/50 p-6 rounded-lg flex flex-col justify-center items-center">
+      <a href="/artist/<%= currentArtist.id %>/tracks/new" class="bg-white text-black px-6 py-3 rounded-full font-bold w-full text-center hover:scale-105 transition-transform">
+        Upload New Track
+      </a>
+    </div>
+  </div>
+
+  <!-- Recent Tracks -->
+  <div>
+    <h2 class="text-2xl font-bold mb-6">Recent Tracks</h2>
+    <% if (currentArtist.tracks && currentArtist.tracks.length > 0) { %>
+      <div class="bg-zinc-800/30 rounded-lg overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-zinc-800 text-zinc-400 text-sm">
+              <th class="p-4 font-normal uppercase tracking-wider">Title</th>
+              <th class="p-4 font-normal uppercase tracking-wider">Status</th>
+              <th class="p-4 font-normal uppercase tracking-wider">Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% currentArtist.tracks.forEach(track => { %>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+                <td class="p-4 font-bold text-white flex items-center gap-4">
+                  <% if (track.coverUrl) { %>
+                    <img src="<%= track.coverUrl %>" class="w-10 h-10 rounded object-cover">
+                  <% } else { %>
+                    <div class="w-10 h-10 rounded bg-zinc-700 flex items-center justify-center">
+                      <svg class="w-4 h-4 text-zinc-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    </div>
+                  <% } %>
+                  <%= track.title %>
+                </td>
+                <td class="p-4">
+                  <% if (track.status === 'PUBLISHED') { %>
+                    <span class="px-2 py-1 bg-green-500/20 text-green-500 text-xs rounded-full uppercase font-bold">Published</span>
+                  <% } else { %>
+                    <span class="px-2 py-1 bg-zinc-700 text-zinc-300 text-xs rounded-full uppercase font-bold">Draft</span>
+                  <% } %>
+                </td>
+                <td class="p-4 text-zinc-400 text-sm">
+                  <%= new Date(track.createdAt).toLocaleDateString() %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-4 text-right">
+        <a href="/artist/<%= currentArtist.id %>/tracks" class="text-zinc-400 hover:text-white text-sm font-bold uppercase tracking-wider">View all tracks &rarr;</a>
+      </div>
+    <% } else { %>
+      <div class="text-center py-12 bg-zinc-800/20 rounded-lg border border-zinc-800 border-dashed">
+        <p class="text-zinc-400 mb-4">You haven't uploaded any tracks yet.</p>
+        <a href="/artist/<%= currentArtist.id %>/tracks/new" class="bg-white text-black px-6 py-2 rounded-full font-bold hover:scale-105 transition-transform inline-block">
+          Upload Track
+        </a>
+      </div>
+    <% } %>
+  </div>
+</div>

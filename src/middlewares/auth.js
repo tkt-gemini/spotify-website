@@ -39,8 +39,48 @@ async function attachCurrentUserToLocals(req, res, next) {
   next();
 }
 
+function requireArtistRole(allowedRoles = []) {
+  return async (req, res, next) => {
+    if (!req.session || !req.session.userId) {
+      return res.redirect('/login');
+    }
+    
+    const artistId = parseInt(req.params.artistId, 10);
+    if (isNaN(artistId)) {
+      return res.status(400).send('Invalid artist ID');
+    }
+
+    try {
+      const teamMember = await prisma.artistTeamMember.findUnique({
+        where: {
+          artistId_userId: {
+            artistId: artistId,
+            userId: req.session.userId
+          }
+        }
+      });
+
+      if (!teamMember) {
+        return res.status(403).send('Forbidden: You are not a team member of this artist');
+      }
+
+      if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
+        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+      }
+
+      // Attach team member info for views
+      res.locals.artistRole = teamMember.role;
+      next();
+    } catch (err) {
+      console.error('Error checking artist role:', err);
+      return res.status(500).send('Internal Server Error');
+    }
+  };
+}
+
 module.exports = {
   requireAuth,
   requireGuest,
-  attachCurrentUserToLocals
+  attachCurrentUserToLocals,
+  requireArtistRole
 };

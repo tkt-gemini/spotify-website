@@ -1,9 +1,13 @@
 node_modules/
 .env
-uploads/images/*
-!uploads/images/.gitkeep
-uploads/audio/*
-!uploads/audio/.gitkeep
+uploads/audio/tracks/*
+!uploads/audio/tracks/.gitkeep
+uploads/images/covers/*
+!uploads/images/covers/.gitkeep
+uploads/images/avatars/*
+!uploads/images/avatars/.gitkeep
+uploads/images/banners/*
+!uploads/images/banners/.gitkeep
 uploads/video/*
 !uploads/video/.gitkeep
 .DS_Store
