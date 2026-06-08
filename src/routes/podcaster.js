@@ -119,6 +119,7 @@ router.get('/shows/:showId', requirePodcastRoleByShowId(), async (req, res) => {
     showRole: res.locals.showRole,
     totalEpisodes,
     publishedEpisodes,
+    activeTab: 'overview',
     layout: 'layouts/podcaster-dashboard'
   });
 });
@@ -135,6 +136,7 @@ router.get('/shows/:showId/episodes', requirePodcastRoleByShowId(), async (req, 
     currentShow: show,
     showRole: res.locals.showRole,
     episodes: show.episodes,
+    activeTab: 'episodes',
     layout: 'layouts/podcaster-dashboard'
   });
 });
@@ -149,6 +151,7 @@ router.get('/shows/:showId/episodes/new', requirePodcastRoleByShowId(['OWNER', '
     showRole: res.locals.showRole,
     episode: null,
     error: null,
+    activeTab: 'episodes',
     layout: 'layouts/podcaster-dashboard'
   });
 });
@@ -166,6 +169,7 @@ router.get('/episodes/:episodeId/edit', requirePodcastRoleByEpisodeId(['OWNER', 
     showRole: res.locals.showRole,
     episode,
     error: null,
+    activeTab: 'episodes',
     layout: 'layouts/podcaster-dashboard'
   });
 });
@@ -183,6 +187,7 @@ router.post('/shows/:showId/episodes', requirePodcastRoleByShowId(['OWNER', 'ADM
       showRole: res.locals.showRole,
       episode: null,
       error: errorMsg,
+      activeTab: 'episodes',
       layout: 'layouts/podcaster-dashboard'
     });
   };
@@ -247,6 +252,7 @@ router.post('/episodes/:episodeId', requirePodcastRoleByEpisodeId(['OWNER', 'ADM
       showRole: res.locals.showRole,
       episode: { id: episodeId, title, description },
       error: errorMsg,
+      activeTab: 'episodes',
       layout: 'layouts/podcaster-dashboard'
     });
   };
@@ -408,6 +414,7 @@ router.get('/shows/:showId/analytics', requirePodcastRoleByShowId(), async (req,
       totalPlaybackStarts
     },
     topEpisodes,
+    activeTab: 'analytics',
     layout: 'layouts/podcaster-dashboard'
   });
 });

@@ -38,4 +38,21 @@ app.use(attachCurrentUserToLocals);
 // Routes
 app.use('/', routes);
 
+// 404 Handler
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'API route not found' });
+  }
+  res.status(404).render('pages/error/404', { layout: false });
+});
+
+// 500 Handler
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+  res.status(500).render('pages/error/500', { layout: false, message: process.env.NODE_ENV === 'development' ? err.message : undefined });
+});
+
 module.exports = app;

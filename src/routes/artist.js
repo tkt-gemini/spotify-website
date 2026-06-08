@@ -139,6 +139,7 @@ router.get('/:artistId/overview', requireArtistRole(), async (req, res) => {
     artistRole: res.locals.artistRole,
     totalTracks,
     publishedTracks,
+    activeTab: 'overview',
     layout: 'layouts/artist-dashboard'
   });
 });
@@ -155,6 +156,7 @@ router.get('/:artistId/tracks', requireArtistRole(), async (req, res) => {
     currentArtist: artist,
     artistRole: res.locals.artistRole,
     tracks: artist.tracks,
+    activeTab: 'tracks',
     layout: 'layouts/artist-dashboard'
   });
 });
@@ -169,6 +171,7 @@ router.get('/:artistId/tracks/new', requireArtistRole(['OWNER', 'MANAGER', 'EDIT
     artistRole: res.locals.artistRole,
     track: null,
     error: null,
+    activeTab: 'tracks',
     layout: 'layouts/artist-dashboard'
   });
 });
@@ -188,6 +191,7 @@ router.get('/:artistId/tracks/:trackId/edit', requireArtistRole(['OWNER', 'MANAG
     artistRole: res.locals.artistRole,
     track,
     error: null,
+    activeTab: 'tracks',
     layout: 'layouts/artist-dashboard'
   });
 });
@@ -211,6 +215,7 @@ router.post(['/:artistId/tracks', '/:artistId/tracks/:trackId'], requireArtistRo
       artistRole: res.locals.artistRole,
       track: trackId ? { id: trackId, title } : null,
       error: errorMsg,
+      activeTab: 'tracks',
       layout: 'layouts/artist-dashboard'
     });
   };
@@ -377,6 +382,7 @@ router.get('/:artistId/analytics', requireArtistRole(), async (req, res) => {
       totalPlaybackStarts
     },
     topTracks,
+    activeTab: 'analytics',
     layout: 'layouts/artist-dashboard'
   });
 });

@@ -41,11 +41,18 @@ async function attachCurrentUserToLocals(req, res, next) {
   next();
 }
 
+function sendForbidden(req, res) {
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  return res.status(403).render('pages/error/403', { layout: false });
+}
+
 function requireAdmin(req, res, next) {
   if (req.currentUser && req.currentUser.defaultRole === 'ADMIN') {
     return next();
   }
-  return res.status(403).send('Forbidden: Administrator access required.');
+  return sendForbidden(req, res);
 }
 
 function requireArtistRole(allowedRoles = []) {
@@ -70,11 +77,11 @@ function requireArtistRole(allowedRoles = []) {
       });
 
       if (!teamMember) {
-        return res.status(403).send('Forbidden: You are not a team member of this artist');
+        return sendForbidden(req, res);
       }
 
       if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
-        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+        return sendForbidden(req, res);
       }
 
       // Attach team member info for views
@@ -100,11 +107,11 @@ function requirePodcastRoleByShowId(allowedRoles = []) {
       });
 
       if (!teamMember) {
-        return res.status(403).send('Forbidden: You are not a team member of this show');
+        return sendForbidden(req, res);
       }
 
       if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
-        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+        return sendForbidden(req, res);
       }
 
       res.locals.showRole = teamMember.role;
@@ -136,11 +143,11 @@ function requirePodcastRoleByEpisodeId(allowedRoles = []) {
       });
 
       if (!teamMember) {
-        return res.status(403).send('Forbidden: You are not a team member of this show');
+        return sendForbidden(req, res);
       }
 
       if (allowedRoles.length > 0 && !allowedRoles.includes(teamMember.role)) {
-        return res.status(403).send(`Forbidden: Requires one of roles: ${allowedRoles.join(', ')}`);
+        return sendForbidden(req, res);
       }
 
       res.locals.showRole = teamMember.role;

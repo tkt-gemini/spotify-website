@@ -14,7 +14,9 @@ async function main() {
   for (const u of users) {
     await prisma.user.upsert({
       where: { email: u.email },
-      update: {},
+      update: {
+        defaultRole: u.role
+      },
       create: {
         email: u.email,
         name: u.name,
@@ -24,10 +26,12 @@ async function main() {
     });
   }
 
-  // Get user@example.com for owner associations
+  // Get users for associations
   const demoUser = await prisma.user.findUnique({ where: { email: 'user@example.com' } });
+  const artistUser = await prisma.user.findUnique({ where: { email: 'artist@example.com' } });
+  const podcasterUser = await prisma.user.findUnique({ where: { email: 'podcaster@example.com' } });
 
-  // 1. Create Demo Artist (upsert based on name or ID? Since we don't have a unique constraint on name, we will try to find first, if not create)
+  // 1. Create Demo Artist
   let demoArtist = await prisma.artist.findFirst({ where: { name: 'Demo Artist' } });
   if (!demoArtist) {
     demoArtist = await prisma.artist.create({
@@ -35,10 +39,10 @@ async function main() {
         name: 'Demo Artist',
         bio: 'This is a demo artist for Phase 2.',
         status: 'PUBLISHED',
-        createdById: demoUser.id,
+        createdById: artistUser.id,
         teamMembers: {
           create: {
-            userId: demoUser.id,
+            userId: artistUser.id,
             role: 'OWNER'
           }
         }
@@ -90,6 +94,40 @@ async function main() {
         name: 'Demo Public Playlist',
         description: 'A demo playlist created during seed.',
         isPublic: true
+      }
+    });
+  }
+
+  // 5. Create Demo Podcast Show
+  let demoShow = await prisma.podcastShow.findFirst({ where: { title: 'Demo Podcast Show' } });
+  if (!demoShow) {
+    demoShow = await prisma.podcastShow.create({
+      data: {
+        title: 'Demo Podcast Show',
+        description: 'This is a demo podcast show.',
+        status: 'PUBLISHED',
+        ownerId: podcasterUser.id,
+        teamMembers: {
+          create: {
+            userId: podcasterUser.id,
+            role: 'OWNER'
+          }
+        }
+      }
+    });
+  }
+
+  // 6. Create Demo Episode
+  let demoEpisode = await prisma.podcastEpisode.findFirst({ where: { title: 'Demo Episode 1', showId: demoShow.id } });
+  if (!demoEpisode) {
+    demoEpisode = await prisma.podcastEpisode.create({
+      data: {
+        showId: demoShow.id,
+        title: 'Demo Episode 1',
+        description: 'The first episode of the demo podcast.',
+        duration: 3600,
+        audioUrl: null, // Ensure UI handles missing audio well
+        status: 'PUBLISHED'
       }
     });
   }

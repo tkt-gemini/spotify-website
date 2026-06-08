@@ -94,7 +94,7 @@ router.get('/app/home', requireAuth, async (req, res) => {
     orderBy: { createdAt: 'desc' },
     take: 20
   });
-  res.render('pages/user/home', { tracks, layout: 'layouts/user-app' });
+  res.render('pages/user/home', { tracks, activeTab: 'home', layout: 'layouts/user-app' });
 });
 
 router.get('/app/search', requireAuth, async (req, res) => {
@@ -102,7 +102,7 @@ router.get('/app/search', requireAuth, async (req, res) => {
   const userId = req.session.userId;
   
   if (!q || q.trim() === '') {
-    return res.render('pages/user/search', { q: '', type, results: null, layout: 'layouts/user-app' });
+    return res.render('pages/user/search', { q: '', type, results: null, activeTab: 'search', layout: 'layouts/user-app' });
   }
 
   const query = q.trim();
@@ -166,7 +166,7 @@ router.get('/app/search', requireAuth, async (req, res) => {
     });
   }
 
-  res.render('pages/user/search', { q: query, type, results, layout: 'layouts/user-app' });
+  res.render('pages/user/search', { q: query, type, results, activeTab: 'search', layout: 'layouts/user-app' });
 });
 
 router.get('/app/library', requireAuth, async (req, res) => {
@@ -188,6 +188,7 @@ router.get('/app/library', requireAuth, async (req, res) => {
     followedPlaylists,
     savedAlbums,
     subscribedShows,
+    activeTab: 'library',
     layout: 'layouts/user-app'
   });
 });
@@ -249,6 +250,7 @@ router.get('/app/playlists/:playlistId', requireAuth, async (req, res) => {
     playlist,
     isOwner,
     availableTracks,
+    activeTab: 'library',
     layout: 'layouts/user-app'
   });
 });
@@ -273,6 +275,7 @@ router.get('/app/podcasts/:showId', requireAuth, async (req, res) => {
 
   res.render('pages/user/podcast-detail', {
     show,
+    activeTab: 'home',
     layout: 'layouts/user-app'
   });
 });
@@ -290,6 +293,7 @@ router.get('/app/episodes/:episodeId', requireAuth, async (req, res) => {
 
   res.render('pages/user/episode-detail', {
     episode,
+    activeTab: 'home',
     layout: 'layouts/user-app'
   });
 });

@@ -24,6 +24,7 @@ router.get('/', async (req, res) => {
 
   res.render('pages/admin/dashboard', {
     layout: 'layouts/admin-dashboard',
+    activeTab: 'dashboard',
     stats: {
       totalUsers,
       totalArtists,
@@ -46,6 +47,7 @@ router.get('/users', async (req, res) => {
 
   res.render('pages/admin/users', {
     layout: 'layouts/admin-dashboard',
+    activeTab: 'users',
     users,
     error
   });
@@ -91,6 +93,7 @@ router.get('/tracks', async (req, res) => {
 
   res.render('pages/admin/tracks', {
     layout: 'layouts/admin-dashboard',
+    activeTab: 'tracks',
     tracks,
     error
   });
@@ -138,6 +141,7 @@ router.get('/podcasts', async (req, res) => {
 
   res.render('pages/admin/podcasts', {
     layout: 'layouts/admin-dashboard',
+    activeTab: 'podcasts',
     shows,
     episodes,
     error
