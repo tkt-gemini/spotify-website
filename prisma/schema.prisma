@@ -1,3 +1,8 @@
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../docs/ERD.svg"
+}
+
 generator client {
   provider = "prisma-client-js"
 }
