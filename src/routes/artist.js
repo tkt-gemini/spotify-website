@@ -324,4 +324,61 @@ router.post('/:artistId/tracks/:trackId/publish', requireArtistRole(['OWNER', 'M
   res.redirect(`/artist/${artistId}/tracks`);
 });
 
+// GET /artist/:artistId/analytics
+router.get('/:artistId/analytics', requireArtistRole(), async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    include: { tracks: true }
+  });
+
+  const trackIds = artist.tracks.map(t => t.id);
+
+  const [totalTracks, publishedTracks, totalLikes, totalPlaybackStarts] = await Promise.all([
+    prisma.track.count({ where: { artistId } }),
+    prisma.track.count({ where: { artistId, status: 'PUBLISHED' } }),
+    prisma.likedTrack.count({ where: { trackId: { in: trackIds } } }),
+    prisma.playbackEvent.count({
+      where: {
+        trackId: { in: trackIds },
+        eventType: 'TRACK_STARTED'
+      }
+    })
+  ]);
+
+  // Top tracks
+  const topTracksQuery = await prisma.playbackEvent.groupBy({
+    by: ['trackId'],
+    where: {
+      trackId: { in: trackIds },
+      eventType: 'TRACK_STARTED'
+    },
+    _count: { id: true },
+    orderBy: { _count: { id: 'desc' } },
+    take: 5
+  });
+
+  // Map track titles to the results
+  const topTracks = topTracksQuery.map(tt => {
+    const track = artist.tracks.find(t => t.id === tt.trackId);
+    return {
+      title: track ? track.title : 'Unknown',
+      plays: tt._count.id
+    };
+  });
+
+  res.render('pages/artist/analytics', {
+    currentArtist: artist,
+    artistRole: res.locals.artistRole,
+    stats: {
+      totalTracks,
+      publishedTracks,
+      totalLikes,
+      totalPlaybackStarts
+    },
+    topTracks,
+    layout: 'layouts/artist-dashboard'
+  });
+});
+
 module.exports = router;

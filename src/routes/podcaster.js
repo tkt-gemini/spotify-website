@@ -355,4 +355,61 @@ router.post('/episodes/:episodeId/schedule', requirePodcastRoleByEpisodeId(['OWN
   res.redirect(`/podcaster/shows/${showId}/episodes`);
 });
 
+// GET /podcaster/shows/:showId/analytics
+router.get('/shows/:showId/analytics', requirePodcastRoleByShowId(), async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  const show = await prisma.podcastShow.findUnique({
+    where: { id: showId },
+    include: { episodes: true }
+  });
+
+  const episodeIds = show.episodes.map(e => e.id);
+
+  const [totalEpisodes, publishedEpisodes, totalSubscribers, totalPlaybackStarts] = await Promise.all([
+    prisma.podcastEpisode.count({ where: { showId } }),
+    prisma.podcastEpisode.count({ where: { showId, status: 'PUBLISHED' } }),
+    prisma.subscribedShow.count({ where: { showId } }),
+    prisma.playbackEvent.count({
+      where: {
+        episodeId: { in: episodeIds },
+        eventType: 'EPISODE_STARTED'
+      }
+    })
+  ]);
+
+  // Top episodes
+  const topEpisodesQuery = await prisma.playbackEvent.groupBy({
+    by: ['episodeId'],
+    where: {
+      episodeId: { in: episodeIds },
+      eventType: 'EPISODE_STARTED'
+    },
+    _count: { id: true },
+    orderBy: { _count: { id: 'desc' } },
+    take: 5
+  });
+
+  // Map episode titles
+  const topEpisodes = topEpisodesQuery.map(te => {
+    const episode = show.episodes.find(e => e.id === te.episodeId);
+    return {
+      title: episode ? episode.title : 'Unknown',
+      plays: te._count.id
+    };
+  });
+
+  res.render('pages/podcaster/analytics', {
+    currentShow: show,
+    showRole: res.locals.showRole,
+    stats: {
+      totalEpisodes,
+      publishedEpisodes,
+      totalSubscribers,
+      totalPlaybackStarts
+    },
+    topEpisodes,
+    layout: 'layouts/podcaster-dashboard'
+  });
+});
+
 module.exports = router;

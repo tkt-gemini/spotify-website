@@ -16,6 +16,7 @@ function requireGuest(req, res, next) {
 
 async function attachCurrentUserToLocals(req, res, next) {
   res.locals.currentUser = null;
+  req.currentUser = null;
   
   if (req.session && req.session.userId) {
     try {
@@ -27,6 +28,7 @@ async function attachCurrentUserToLocals(req, res, next) {
         // Exclude passwordHash from being exposed to views
         const { passwordHash, ...userWithoutPassword } = user;
         res.locals.currentUser = userWithoutPassword;
+        req.currentUser = userWithoutPassword;
       } else {
         // Invalid session userId
         req.session.destroy();
@@ -37,6 +39,13 @@ async function attachCurrentUserToLocals(req, res, next) {
   }
   
   next();
+}
+
+function requireAdmin(req, res, next) {
+  if (req.currentUser && req.currentUser.defaultRole === 'ADMIN') {
+    return next();
+  }
+  return res.status(403).send('Forbidden: Administrator access required.');
 }
 
 function requireArtistRole(allowedRoles = []) {
@@ -148,6 +157,7 @@ module.exports = {
   requireAuth,
   requireGuest,
   attachCurrentUserToLocals,
+  requireAdmin,
   requireArtistRole,
   requirePodcastRoleByShowId,
   requirePodcastRoleByEpisodeId

@@ -300,6 +300,10 @@ router.use('/artist', requireAuth, artistRoutes);
 const podcasterRoutes = require('./podcaster');
 router.use('/podcaster', requireAuth, podcasterRoutes);
 
+const { requireAdmin } = require('../middlewares/auth');
+const adminRoutes = require('./admin');
+router.use('/admin', requireAuth, requireAdmin, adminRoutes);
+
 // API Routes
 router.post('/api/v1/playback/start', requireAuth, async (req, res) => {
   const { entityType, entityId } = req.body;

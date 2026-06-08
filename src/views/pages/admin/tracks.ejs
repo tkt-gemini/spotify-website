@@ -1,0 +1,71 @@
+<div class="max-w-6xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold">Track Management</h1>
+    <p class="text-zinc-400 mt-2">View and manage all uploaded tracks.</p>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="bg-red-500/10 border border-red-500 text-red-500 p-4 rounded-md mb-6">
+      <%= error %>
+    </div>
+  <% } %>
+
+  <div class="bg-zinc-800/30 rounded-lg overflow-hidden border border-zinc-800">
+    <table class="w-full text-left border-collapse">
+      <thead>
+        <tr class="bg-zinc-800 border-b border-zinc-700 text-zinc-400 text-sm">
+          <th class="p-4 font-normal uppercase tracking-wider">Title / Artist</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Audio File</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Created At</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Status</th>
+          <th class="p-4 font-normal uppercase tracking-wider text-right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (tracks && tracks.length > 0) { %>
+          <% tracks.forEach(track => { %>
+            <tr class="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+              <td class="p-4">
+                <div class="font-bold text-white"><%= track.title %></div>
+                <div class="text-sm text-zinc-400"><%= track.artist.name %></div>
+              </td>
+              <td class="p-4">
+                <% if (track.audioUrl) { %>
+                  <span class="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded uppercase font-bold">Yes</span>
+                <% } else { %>
+                  <span class="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded uppercase font-bold">No</span>
+                <% } %>
+              </td>
+              <td class="p-4 text-zinc-400 text-sm">
+                <%= new Date(track.createdAt).toLocaleDateString() %>
+              </td>
+              <td class="p-4">
+                <span class="px-2 py-1 bg-zinc-700 text-zinc-300 text-xs rounded uppercase font-bold">
+                  <%= track.status %>
+                </span>
+              </td>
+              <td class="p-4 text-right">
+                <form action="/admin/tracks/<%= track.id %>/status" method="POST" class="inline-flex items-center gap-2">
+                  <select name="status" class="bg-zinc-900 border border-zinc-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-white">
+                    <option value="DRAFT" <%= track.status === 'DRAFT' ? 'selected' : '' %>>DRAFT</option>
+                    <option value="PUBLISHED" <%= track.status === 'PUBLISHED' ? 'selected' : '' %>>PUBLISHED</option>
+                    <option value="HIDDEN" <%= track.status === 'HIDDEN' ? 'selected' : '' %>>HIDDEN</option>
+                    <option value="ARCHIVED" <%= track.status === 'ARCHIVED' ? 'selected' : '' %>>ARCHIVED</option>
+                    <option value="REMOVED" <%= track.status === 'REMOVED' ? 'selected' : '' %>>REMOVED</option>
+                  </select>
+                  <button type="submit" class="bg-white text-black px-3 py-1 rounded text-sm font-bold hover:bg-zinc-200 transition-colors">
+                    Save
+                  </button>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="5" class="p-8 text-center text-zinc-500">No tracks found.</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="max-w-6xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold">Platform Overview</h1>
+    <p class="text-zinc-400 mt-2">Global statistics and performance metrics.</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-blue-500">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Users</h3>
+      <p class="text-4xl font-bold"><%= stats.totalUsers %></p>
+    </div>
+    
+    <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-green-500">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Artists</h3>
+      <p class="text-4xl font-bold"><%= stats.totalArtists %></p>
+    </div>
+
+    <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-purple-500">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Shows</h3>
+      <p class="text-4xl font-bold"><%= stats.totalPodcasts %></p>
+    </div>
+
+    <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-red-500">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Playbacks</h3>
+      <p class="text-4xl font-bold"><%= stats.totalPlaybackEvents %></p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
+      <h2 class="text-xl font-bold mb-4">Tracks Overview</h2>
+      <div class="flex items-end gap-4 mb-2">
+        <span class="text-5xl font-extrabold"><%= stats.publishedTracks %></span>
+        <span class="text-zinc-400 pb-1">published</span>
+      </div>
+      <p class="text-sm text-zinc-500">Out of <%= stats.totalTracks %> total tracks created.</p>
+      
+      <div class="w-full bg-zinc-700 rounded-full h-2.5 mt-4">
+        <div class="bg-green-500 h-2.5 rounded-full" style="width: <%= stats.totalTracks > 0 ? (stats.publishedTracks / stats.totalTracks) * 100 : 0 %>%"></div>
+      </div>
+    </div>
+
+    <div class="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
+      <h2 class="text-xl font-bold mb-4">Episodes Overview</h2>
+      <div class="flex items-end gap-4 mb-2">
+        <span class="text-5xl font-extrabold"><%= stats.publishedEpisodes %></span>
+        <span class="text-zinc-400 pb-1">published</span>
+      </div>
+      <p class="text-sm text-zinc-500">Out of total episodes uploaded.</p>
+    </div>
+  </div>
+</div>
