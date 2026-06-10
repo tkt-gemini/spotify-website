@@ -103,6 +103,74 @@ router.post('/shows', uploadPodcastShowCover.single('cover'), async (req, res) =
   }
 });
 
+// GET /podcaster/shows/:showId/edit
+router.get('/shows/:showId/edit', requirePodcastRoleByShowId(['OWNER', 'ADMIN', 'PRODUCER', 'EDITOR']), async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  const show = await prisma.podcastShow.findUnique({ where: { id: showId } });
+
+  res.render('pages/podcaster/show-form', {
+    show,
+    error: null,
+    layout: 'layouts/podcaster-dashboard'
+  });
+});
+
+// POST /podcaster/shows/:showId
+router.post('/shows/:showId', requirePodcastRoleByShowId(['OWNER', 'ADMIN', 'PRODUCER', 'EDITOR']), uploadPodcastShowCover.single('cover'), async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  const { title, description } = req.body;
+  const show = await prisma.podcastShow.findUnique({ where: { id: showId } });
+
+  const renderError = (errorMsg) => {
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, () => {});
+    }
+    res.render('pages/podcaster/show-form', {
+      show: { id: showId, title, description, coverUrl: show.coverUrl },
+      error: errorMsg,
+      layout: 'layouts/podcaster-dashboard'
+    });
+  };
+
+  if (!title || title.trim() === '') {
+    return renderError('Title is required');
+  }
+
+  let coverUrl = show.coverUrl;
+
+  try {
+    if (req.file) {
+      coverUrl = `/uploads/images/covers/${req.file.filename}`;
+      await prisma.mediaAsset.create({
+        data: {
+          ownerUserId: req.session.userId,
+          originalFilename: req.file.originalname,
+          filename: req.file.filename,
+          mimeType: req.file.mimetype,
+          sizeBytes: req.file.size,
+          localPath: req.file.path,
+          publicUrl: coverUrl,
+          type: 'IMAGE'
+        }
+      });
+    }
+
+    await prisma.podcastShow.update({
+      where: { id: showId },
+      data: {
+        title: title.trim(),
+        description: description ? description.trim() : null,
+        coverUrl
+      }
+    });
+
+    res.redirect(`/podcaster/shows/${showId}`);
+  } catch (err) {
+    console.error(err);
+    renderError('Server error while updating show');
+  }
+});
+
 // GET /podcaster/shows/:showId
 router.get('/shows/:showId', requirePodcastRoleByShowId(), async (req, res) => {
   const showId = parseInt(req.params.showId, 10);

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const prisma = require('../config/prisma');
-const { upload } = require('../middlewares/upload');
+const { upload, uploadAlbumCover } = require('../middlewares/upload');
 const { requireArtistRole } = require('../middlewares/auth');
 const fs = require('fs');
 const path = require('path');
@@ -164,11 +164,15 @@ router.get('/:artistId/tracks', requireArtistRole(), async (req, res) => {
 // GET /artist/:artistId/tracks/new
 router.get('/:artistId/tracks/new', requireArtistRole(['OWNER', 'MANAGER', 'EDITOR']), async (req, res) => {
   const artistId = parseInt(req.params.artistId, 10);
-  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+  const artist = await prisma.artist.findUnique({ 
+    where: { id: artistId },
+    include: { albums: true } 
+  });
 
   res.render('pages/artist/track-form', {
     currentArtist: artist,
     artistRole: res.locals.artistRole,
+    albums: artist.albums,
     track: null,
     error: null,
     activeTab: 'tracks',
@@ -181,7 +185,10 @@ router.get('/:artistId/tracks/:trackId/edit', requireArtistRole(['OWNER', 'MANAG
   const artistId = parseInt(req.params.artistId, 10);
   const trackId = parseInt(req.params.trackId, 10);
   
-  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+  const artist = await prisma.artist.findUnique({ 
+    where: { id: artistId },
+    include: { albums: true }
+  });
   const track = await prisma.track.findUnique({ where: { id: trackId, artistId } });
 
   if (!track) return res.redirect(`/artist/${artistId}/tracks`);
@@ -189,6 +196,7 @@ router.get('/:artistId/tracks/:trackId/edit', requireArtistRole(['OWNER', 'MANAG
   res.render('pages/artist/track-form', {
     currentArtist: artist,
     artistRole: res.locals.artistRole,
+    albums: artist.albums,
     track,
     error: null,
     activeTab: 'tracks',
@@ -196,24 +204,28 @@ router.get('/:artistId/tracks/:trackId/edit', requireArtistRole(['OWNER', 'MANAG
   });
 });
 
-// POST /artist/:artistId/tracks (Create)
-// POST /artist/:artistId/tracks/:trackId (Edit)
 router.post(['/:artistId/tracks', '/:artistId/tracks/:trackId'], requireArtistRole(['OWNER', 'MANAGER', 'EDITOR']), upload.fields([
   { name: 'audio', maxCount: 1 },
   { name: 'cover', maxCount: 1 }
 ]), async (req, res) => {
   const artistId = parseInt(req.params.artistId, 10);
   const trackId = req.params.trackId ? parseInt(req.params.trackId, 10) : null;
-  const { title, action } = req.body;
+  const { title, action, albumId } = req.body;
   
-  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+  const artist = await prisma.artist.findUnique({ 
+    where: { id: artistId },
+    include: { albums: true }
+  });
+
+  const parsedAlbumId = albumId ? parseInt(albumId, 10) : null;
 
   const renderError = (errorMsg) => {
     removeFiles(req.files);
     res.render('pages/artist/track-form', {
       currentArtist: artist,
       artistRole: res.locals.artistRole,
-      track: trackId ? { id: trackId, title } : null,
+      albums: artist.albums,
+      track: trackId ? { id: trackId, title, albumId: parsedAlbumId } : { title, albumId: parsedAlbumId },
       error: errorMsg,
       activeTab: 'tracks',
       layout: 'layouts/artist-dashboard'
@@ -222,6 +234,13 @@ router.post(['/:artistId/tracks', '/:artistId/tracks/:trackId'], requireArtistRo
 
   if (!title || title.trim() === '') {
     return renderError('Title is required');
+  }
+
+  if (parsedAlbumId) {
+    const validAlbum = artist.albums.find(a => a.id === parsedAlbumId);
+    if (!validAlbum) {
+      return renderError('Invalid album selected');
+    }
   }
 
   // Image size limit check
@@ -281,6 +300,7 @@ router.post(['/:artistId/tracks', '/:artistId/tracks/:trackId'], requireArtistRo
         where: { id: trackId },
         data: {
           title: title.trim(),
+          albumId: parsedAlbumId,
           ...(audioUrl && { audioUrl }),
           ...(coverUrl && { coverUrl }),
           status: action === 'publish' ? 'PUBLISHED' : 'DRAFT'
@@ -294,6 +314,7 @@ router.post(['/:artistId/tracks', '/:artistId/tracks/:trackId'], requireArtistRo
       track = await prisma.track.create({
         data: {
           artistId,
+          albumId: parsedAlbumId,
           title: title.trim(),
           audioUrl,
           coverUrl,
@@ -327,6 +348,147 @@ router.post('/:artistId/tracks/:trackId/publish', requireArtistRole(['OWNER', 'M
   });
 
   res.redirect(`/artist/${artistId}/tracks`);
+});
+
+// GET /artist/:artistId/albums
+router.get('/:artistId/albums', requireArtistRole(['OWNER', 'MANAGER', 'EDITOR', 'VIEWER']), async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId },
+    include: { albums: { orderBy: { createdAt: 'desc' } } }
+  });
+
+  res.render('pages/artist/albums', {
+    currentArtist: artist,
+    artistRole: res.locals.artistRole,
+    albums: artist.albums,
+    activeTab: 'albums',
+    layout: 'layouts/artist-dashboard'
+  });
+});
+
+// GET /artist/:artistId/albums/new
+router.get('/:artistId/albums/new', requireArtistRole(['OWNER', 'MANAGER', 'EDITOR']), async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+
+  res.render('pages/artist/album-form', {
+    currentArtist: artist,
+    artistRole: res.locals.artistRole,
+    album: null,
+    error: null,
+    activeTab: 'albums',
+    layout: 'layouts/artist-dashboard'
+  });
+});
+
+// GET /artist/:artistId/albums/:albumId/edit
+router.get('/:artistId/albums/:albumId/edit', requireArtistRole(['OWNER', 'MANAGER', 'EDITOR']), async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  const albumId = parseInt(req.params.albumId, 10);
+  
+  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+  const album = await prisma.album.findUnique({ where: { id: albumId, artistId } });
+
+  if (!album) return res.redirect(`/artist/${artistId}/albums`);
+
+  res.render('pages/artist/album-form', {
+    currentArtist: artist,
+    artistRole: res.locals.artistRole,
+    album,
+    error: null,
+    activeTab: 'albums',
+    layout: 'layouts/artist-dashboard'
+  });
+});
+
+// POST /artist/:artistId/albums
+// POST /artist/:artistId/albums/:albumId
+router.post(['/:artistId/albums', '/:artistId/albums/:albumId'], requireArtistRole(['OWNER', 'MANAGER', 'EDITOR']), uploadAlbumCover.single('cover'), async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  const albumId = req.params.albumId ? parseInt(req.params.albumId, 10) : null;
+  const { title, releaseDate, status } = req.body;
+  
+  const artist = await prisma.artist.findUnique({ where: { id: artistId } });
+
+  const renderError = (errorMsg) => {
+    if (req.file && req.file.path) {
+      fs.unlink(req.file.path, () => {});
+    }
+    res.render('pages/artist/album-form', {
+      currentArtist: artist,
+      artistRole: res.locals.artistRole,
+      album: albumId ? { id: albumId, title, releaseDate, status } : null,
+      error: errorMsg,
+      activeTab: 'albums',
+      layout: 'layouts/artist-dashboard'
+    });
+  };
+
+  if (!title || title.trim() === '') {
+    return renderError('Album title is required');
+  }
+  
+  const validStatus = (status === 'PUBLISHED') ? 'PUBLISHED' : 'DRAFT';
+
+  let coverUrl = undefined;
+
+  try {
+    if (req.file) {
+      coverUrl = `/uploads/images/covers/${req.file.filename}`;
+      await prisma.mediaAsset.create({
+        data: {
+          ownerUserId: req.session.userId,
+          originalFilename: req.file.originalname,
+          filename: req.file.filename,
+          mimeType: req.file.mimetype,
+          sizeBytes: req.file.size,
+          localPath: req.file.path,
+          publicUrl: coverUrl,
+          type: 'IMAGE'
+        }
+      });
+    }
+
+    let parsedDate = null;
+    if (releaseDate) {
+      parsedDate = new Date(releaseDate);
+      if (isNaN(parsedDate.getTime())) parsedDate = null;
+    }
+
+    if (albumId) {
+      const existing = await prisma.album.findUnique({ where: { id: albumId, artistId } });
+      if (!existing) {
+        if (req.file && req.file.path) fs.unlink(req.file.path, () => {});
+        return res.redirect(`/artist/${artistId}/albums`);
+      }
+      
+      await prisma.album.update({
+        where: { id: albumId },
+        data: {
+          title: title.trim(),
+          status: validStatus,
+          ...(parsedDate && { releaseDate: parsedDate }),
+          ...(coverUrl && { coverUrl })
+        }
+      });
+    } else {
+      await prisma.album.create({
+        data: {
+          artistId,
+          title: title.trim(),
+          status: validStatus,
+          ...(parsedDate && { releaseDate: parsedDate }),
+          coverUrl
+        }
+      });
+    }
+
+    res.redirect(`/artist/${artistId}/albums`);
+  } catch (err) {
+    console.error(err);
+    renderError('Server error while saving album');
+  }
 });
 
 // GET /artist/:artistId/analytics

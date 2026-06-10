@@ -93,8 +93,27 @@ const uploadEpisodeAudio = multer({
   limits: { fileSize: 300 * 1024 * 1024 } // 300MB
 });
 
+const uploadAlbumCover = multer({
+  storage: multer.diskStorage({
+    destination: 'uploads/images/covers',
+    filename: function (req, file, cb) {
+      const ext = path.extname(file.originalname);
+      cb(null, crypto.randomUUID() + ext);
+    }
+  }),
+  fileFilter: (req, file, cb) => {
+    if (['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid image file type'), false);
+    }
+  },
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB
+});
+
 module.exports = {
   upload,
   uploadPodcastShowCover,
-  uploadEpisodeAudio
+  uploadEpisodeAudio,
+  uploadAlbumCover
 };

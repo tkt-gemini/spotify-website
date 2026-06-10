@@ -400,6 +400,65 @@ router.get('/app/episodes/:episodeId', requireAuth, async (req, res) => {
     layout: 'layouts/user-app'
   });
 });
+router.get('/app/profile', requireAuth, (req, res) => {
+  res.render('pages/user/profile', {
+    activeTab: 'profile',
+    error: null,
+    success: null,
+    layout: 'layouts/user-app'
+  });
+});
+
+router.post('/app/profile', requireAuth, async (req, res) => {
+  const { name, currentPassword, newPassword, confirmPassword } = req.body;
+  const user = await prisma.user.findUnique({ where: { id: req.session.userId } });
+
+  const renderForm = (error, success = null) => {
+    res.render('pages/user/profile', {
+      activeTab: 'profile',
+      error,
+      success,
+      layout: 'layouts/user-app'
+    });
+  };
+
+  if (!name || name.trim() === '') {
+    return renderForm('Name is required.');
+  }
+
+  const updates = { name: name.trim() };
+
+  // Password change requested
+  if (newPassword || currentPassword || confirmPassword) {
+    if (!currentPassword) {
+      return renderForm('Current password is required to change password.');
+    }
+    if (!newPassword || newPassword.length < 6) {
+      return renderForm('New password must be at least 6 characters.');
+    }
+    if (newPassword !== confirmPassword) {
+      return renderForm('Passwords do not match.');
+    }
+    
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isPasswordValid) {
+      return renderForm('Incorrect current password.');
+    }
+    
+    updates.passwordHash = await bcrypt.hash(newPassword, 10);
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: updates
+  });
+  
+  // Update locals
+  res.locals.currentUser.name = updates.name;
+
+  renderForm(null, 'Profile updated successfully.');
+});
+
 
 const artistRoutes = require('./artist');
 router.use('/artist', requireAuth, artistRoutes);

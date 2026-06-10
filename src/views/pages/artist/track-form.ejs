@@ -17,6 +17,16 @@
     </div>
 
     <div>
+      <label for="albumId" class="block text-sm font-bold mb-2">Album (Optional)</label>
+      <select id="albumId" name="albumId" class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors">
+        <option value="">-- No Album --</option>
+        <% albums.forEach(album => { %>
+          <option value="<%= album.id %>" <%= track && track.albumId === album.id ? 'selected' : '' %>><%= album.title %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <div>
       <label for="audio" class="block text-sm font-bold mb-2">Audio File</label>
       <input type="file" id="audio" name="audio" accept="audio/mpeg, audio/wav, audio/x-wav, audio/ogg" class="w-full text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors">
       <p class="text-xs text-zinc-500 mt-2">Max 100MB. MP3, WAV, or OGG. Required if publishing.</p>

@@ -1,7 +1,7 @@
 <div class="max-w-2xl mx-auto py-12">
   <div class="mb-8">
     <a href="/podcaster/shows" class="text-zinc-400 hover:text-white text-sm mb-4 inline-block">&larr; Back to Shows</a>
-    <h1 class="text-3xl font-bold">Create Show</h1>
+    <h1 class="text-3xl font-bold"><%= typeof show !== 'undefined' && show && show.id ? 'Edit Show' : 'Create Show' %></h1>
   </div>
 
   <% if (typeof error !== 'undefined' && error) { %>
@@ -10,26 +10,29 @@
     </div>
   <% } %>
 
-  <form action="/podcaster/shows" method="POST" enctype="multipart/form-data" class="space-y-6 bg-zinc-900 p-8 rounded-lg">
+  <form action="<%= typeof show !== 'undefined' && show && show.id ? `/podcaster/shows/${show.id}` : '/podcaster/shows' %>" method="POST" enctype="multipart/form-data" class="space-y-6 bg-zinc-900 p-8 rounded-lg">
     <div>
       <label for="title" class="block text-sm font-bold mb-2">Show Title <span class="text-red-500">*</span></label>
-      <input type="text" id="title" name="title" required class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Daily Tech News">
+      <input type="text" id="title" name="title" value="<%= typeof show !== 'undefined' && show ? show.title : '' %>" required class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="e.g. Daily Tech News">
     </div>
 
     <div>
       <label for="description" class="block text-sm font-bold mb-2">Description (Optional)</label>
-      <textarea id="description" name="description" rows="4" class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="What is your show about?"></textarea>
+      <textarea id="description" name="description" rows="4" class="w-full bg-zinc-800 border border-zinc-700 rounded p-3 focus:outline-none focus:border-white transition-colors" placeholder="What is your show about?"><%= typeof show !== 'undefined' && show && show.description ? show.description : '' %></textarea>
     </div>
 
     <div>
       <label for="cover" class="block text-sm font-bold mb-2">Cover Image (Optional)</label>
       <input type="file" id="cover" name="cover" accept="image/jpeg, image/png, image/webp" class="w-full text-zinc-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 transition-colors">
       <p class="text-xs text-zinc-500 mt-2">Max 10MB. JPEG, PNG, or WEBP.</p>
+      <% if (typeof show !== 'undefined' && show && show.coverUrl) { %>
+        <p class="text-xs text-green-500 mt-1">✓ Cover image already uploaded.</p>
+      <% } %>
     </div>
 
     <div class="pt-4 border-t border-zinc-800 flex justify-end gap-4">
-      <a href="/podcaster/shows" class="px-6 py-3 font-bold text-zinc-300 hover:text-white">Cancel</a>
-      <button type="submit" class="bg-green-500 text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform">Create Show</button>
+      <a href="/podcaster/shows<%= typeof show !== 'undefined' && show && show.id ? `/${show.id}` : '' %>" class="px-6 py-3 font-bold text-zinc-300 hover:text-white">Cancel</a>
+      <button type="submit" class="bg-green-500 text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition-transform"><%= typeof show !== 'undefined' && show && show.id ? 'Save Changes' : 'Create Show' %></button>
     </div>
   </form>
 </div>
