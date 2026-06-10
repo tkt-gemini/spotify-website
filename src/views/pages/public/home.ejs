@@ -1,0 +1,114 @@
+<div class="mb-8">
+  <h1 class="text-3xl font-bold mb-4">Discover Content</h1>
+  <div class="flex gap-2 mb-6 flex-wrap">
+    <% const genres = ['Pop', 'Rock', 'Lo-fi', 'EDM', 'Ballad', 'Hip-hop']; %>
+    <% const categories = ['Technology', 'Education', 'News', 'Storytelling']; %>
+
+    <a href="/" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'all' && !genre && !category ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">All</a>
+    <a href="/?type=music" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'music' && !genre ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">Music</a>
+    <a href="/?type=podcast" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'podcast' && !category ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">Podcasts</a>
+    
+    <% genres.forEach(g => { %>
+      <a href="/?type=music&genre=<%= g %>" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= genre === g ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>"><%= g %></a>
+    <% }) %>
+
+    <% categories.forEach(c => { %>
+      <a href="/?type=podcast&category=<%= c %>" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= category === c ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>"><%= c %></a>
+    <% }) %>
+  </div>
+</div>
+
+<% if (tracks && tracks.length > 0) { %>
+  <section class="mb-10">
+    <h2 class="text-2xl font-bold mb-4 hover:underline cursor-pointer">Preview Tracks</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% tracks.forEach(track => { %>
+        <div class="bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition group relative">
+          <div class="relative w-full aspect-square mb-4 shadow-lg">
+            <img src="<%= track.coverUrl || '/images/default-cover.png' %>" class="w-full h-full object-cover rounded-md">
+            <% if (track.audioUrl) { %>
+              <button onclick="window.PublicPlayer.playTrack('<%= track.id %>')" class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:scale-105 hover:bg-green-400 shadow-xl">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-black"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            <% } %>
+          </div>
+          <h3 class="font-semibold text-white truncate"><%= track.title %></h3>
+          <p class="text-sm text-gray-400 truncate"><%= track.artist.name %></p>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (episodes && episodes.length > 0) { %>
+  <section class="mb-10">
+    <h2 class="text-2xl font-bold mb-4 hover:underline cursor-pointer">Preview Episodes</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% episodes.forEach(ep => { %>
+        <div class="bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition group relative">
+          <div class="relative w-full aspect-square mb-4 shadow-lg">
+            <img src="<%= ep.show.coverUrl || '/images/default-cover.png' %>" class="w-full h-full object-cover rounded-md">
+            <% if (ep.audioUrl) { %>
+              <button onclick="window.PublicPlayer.playEpisode('<%= ep.id %>')" class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition hover:scale-105 hover:bg-green-400 shadow-xl">
+                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-black"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            <% } %>
+          </div>
+          <h3 class="font-semibold text-white truncate"><%= ep.title %></h3>
+          <p class="text-sm text-gray-400 truncate"><%= ep.show.title %></p>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (albums && albums.length > 0) { %>
+  <section class="mb-10">
+    <h2 class="text-2xl font-bold mb-4 hover:underline cursor-pointer">Popular Albums</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% albums.forEach(album => { %>
+        <div class="bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition group">
+          <div class="w-full aspect-square mb-4 shadow-lg">
+            <img src="<%= album.coverUrl || '/images/default-cover.png' %>" class="w-full h-full object-cover rounded-md">
+          </div>
+          <h3 class="font-semibold text-white truncate"><%= album.title %></h3>
+          <p class="text-sm text-gray-400 truncate"><%= album.artist.name %></p>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (artists && artists.length > 0) { %>
+  <section class="mb-10">
+    <h2 class="text-2xl font-bold mb-4 hover:underline cursor-pointer">Featured Artists</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% artists.forEach(artist => { %>
+        <div class="bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition group text-center">
+          <div class="w-full aspect-square mb-4 shadow-lg rounded-full overflow-hidden">
+            <img src="<%= artist.avatarUrl || '/images/default-avatar.png' %>" class="w-full h-full object-cover">
+          </div>
+          <h3 class="font-semibold text-white truncate"><%= artist.name %></h3>
+          <p class="text-sm text-gray-400">Artist</p>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<% if (shows && shows.length > 0) { %>
+  <section class="mb-10">
+    <h2 class="text-2xl font-bold mb-4 hover:underline cursor-pointer">Top Podcasts</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <% shows.forEach(show => { %>
+        <div class="bg-[#181818] p-4 rounded-md hover:bg-[#282828] transition group">
+          <div class="w-full aspect-square mb-4 shadow-lg">
+            <img src="<%= show.coverUrl || '/images/default-cover.png' %>" class="w-full h-full object-cover rounded-md">
+          </div>
+          <h3 class="font-semibold text-white truncate"><%= show.title %></h3>
+          <p class="text-sm text-gray-400 truncate"><%= show.owner.name %></p>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>

@@ -4,9 +4,11 @@ This is a monolithic, localhost-only clone of Spotify. It allows Users, Artists,
 
 ## Features
 
+- **Public Home**: Listen to previews of tracks and podcasts without an account.
+- **Content Filters**: Easily filter tracks and podcasts by genre and category (Pop, Rock, Technology, etc.) across the app.
 - **User App**: Discover, search, and listen to published tracks and podcasts. Manage libraries and create playlists.
-- **Artist Dashboard**: Create artists, upload tracks with cover art and audio files, view analytics.
-- **Podcaster Dashboard**: Create shows, schedule and publish episodes, view analytics.
+- **Artist Dashboard**: Create artists, upload tracks with cover art and audio files. View deep analytics including playback completions and listener drop-off rates.
+- **Podcaster Dashboard**: Create shows, schedule and publish episodes. Track performance with detailed analytics metrics.
 - **Admin Dashboard**: Manage users, tracks, and podcasts. Monitor global statistics.
 - **Local Audio Playback**: Tracks and episodes play sequentially via a persistent bottom player.
 
@@ -35,6 +37,7 @@ This is a monolithic, localhost-only clone of Spotify. It allows Users, Artists,
    ```bash
    npm run db:seed
    ```
+   *Note: This script automatically generates hundreds of database records and dummy audio files (WAV) so you can immediately preview playbacks without needing to upload files manually.*
 5. **Start Application**:
    ```bash
    npm run dev

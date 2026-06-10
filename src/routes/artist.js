@@ -501,17 +501,24 @@ router.get('/:artistId/analytics', requireArtistRole(), async (req, res) => {
 
   const trackIds = artist.tracks.map(t => t.id);
 
-  const [totalTracks, publishedTracks, totalLikes, totalPlaybackStarts] = await Promise.all([
+  const [totalTracks, publishedTracks, totalPlaybackStarts, totalCompletions] = await Promise.all([
     prisma.track.count({ where: { artistId } }),
     prisma.track.count({ where: { artistId, status: 'PUBLISHED' } }),
-    prisma.likedTrack.count({ where: { trackId: { in: trackIds } } }),
     prisma.playbackEvent.count({
       where: {
         trackId: { in: trackIds },
         eventType: 'TRACK_STARTED'
       }
+    }),
+    prisma.playbackEvent.count({
+      where: {
+        trackId: { in: trackIds },
+        eventType: 'TRACK_COMPLETED'
+      }
     })
   ]);
+
+  const completionRate = totalPlaybackStarts > 0 ? Math.round((totalCompletions / totalPlaybackStarts) * 100) : 0;
 
   // Top tracks
   const topTracksQuery = await prisma.playbackEvent.groupBy({
@@ -525,12 +532,32 @@ router.get('/:artistId/analytics', requireArtistRole(), async (req, res) => {
     take: 5
   });
 
-  // Map track titles to the results
   const topTracks = topTracksQuery.map(tt => {
     const track = artist.tracks.find(t => t.id === tt.trackId);
     return {
       title: track ? track.title : 'Unknown',
       plays: tt._count.id
+    };
+  });
+
+  // Recent events
+  const recentEventsRaw = await prisma.playbackEvent.findMany({
+    where: {
+      trackId: { in: trackIds },
+      eventType: { in: ['TRACK_STARTED', 'TRACK_COMPLETED'] }
+    },
+    orderBy: { playedAt: 'desc' },
+    take: 10,
+    include: { user: true }
+  });
+
+  const recentEvents = recentEventsRaw.map(ev => {
+    const track = artist.tracks.find(t => t.id === ev.trackId);
+    return {
+      trackTitle: track ? track.title : 'Unknown',
+      eventType: ev.eventType,
+      playedAt: ev.playedAt,
+      user: ev.user ? ev.user.name : 'Guest'
     };
   });
 
@@ -540,10 +567,12 @@ router.get('/:artistId/analytics', requireArtistRole(), async (req, res) => {
     stats: {
       totalTracks,
       publishedTracks,
-      totalLikes,
-      totalPlaybackStarts
+      totalPlays: totalPlaybackStarts,
+      totalCompletions,
+      completionRate
     },
     topTracks,
+    recentEvents,
     activeTab: 'analytics',
     layout: 'layouts/artist-dashboard'
   });

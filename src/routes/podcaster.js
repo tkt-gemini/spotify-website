@@ -439,17 +439,24 @@ router.get('/shows/:showId/analytics', requirePodcastRoleByShowId(), async (req,
 
   const episodeIds = show.episodes.map(e => e.id);
 
-  const [totalEpisodes, publishedEpisodes, totalSubscribers, totalPlaybackStarts] = await Promise.all([
+  const [totalEpisodes, publishedEpisodes, totalPlaybackStarts, totalCompletions] = await Promise.all([
     prisma.podcastEpisode.count({ where: { showId } }),
     prisma.podcastEpisode.count({ where: { showId, status: 'PUBLISHED' } }),
-    prisma.subscribedShow.count({ where: { showId } }),
     prisma.playbackEvent.count({
       where: {
         episodeId: { in: episodeIds },
         eventType: 'EPISODE_STARTED'
       }
+    }),
+    prisma.playbackEvent.count({
+      where: {
+        episodeId: { in: episodeIds },
+        eventType: 'EPISODE_COMPLETED'
+      }
     })
   ]);
+
+  const completionRate = totalPlaybackStarts > 0 ? Math.round((totalCompletions / totalPlaybackStarts) * 100) : 0;
 
   // Top episodes
   const topEpisodesQuery = await prisma.playbackEvent.groupBy({
@@ -463,12 +470,32 @@ router.get('/shows/:showId/analytics', requirePodcastRoleByShowId(), async (req,
     take: 5
   });
 
-  // Map episode titles
   const topEpisodes = topEpisodesQuery.map(te => {
     const episode = show.episodes.find(e => e.id === te.episodeId);
     return {
       title: episode ? episode.title : 'Unknown',
       plays: te._count.id
+    };
+  });
+
+  // Recent events
+  const recentEventsRaw = await prisma.playbackEvent.findMany({
+    where: {
+      episodeId: { in: episodeIds },
+      eventType: { in: ['EPISODE_STARTED', 'EPISODE_COMPLETED'] }
+    },
+    orderBy: { playedAt: 'desc' },
+    take: 10,
+    include: { user: true }
+  });
+
+  const recentEvents = recentEventsRaw.map(ev => {
+    const episode = show.episodes.find(e => e.id === ev.episodeId);
+    return {
+      trackTitle: episode ? episode.title : 'Unknown',
+      eventType: ev.eventType,
+      playedAt: ev.playedAt,
+      user: ev.user ? ev.user.name : 'Guest'
     };
   });
 
@@ -478,10 +505,12 @@ router.get('/shows/:showId/analytics', requirePodcastRoleByShowId(), async (req,
     stats: {
       totalEpisodes,
       publishedEpisodes,
-      totalSubscribers,
-      totalPlaybackStarts
+      totalPlays: totalPlaybackStarts,
+      totalCompletions,
+      completionRate
     },
     topEpisodes,
+    recentEvents,
     activeTab: 'analytics',
     layout: 'layouts/podcaster-dashboard'
   });

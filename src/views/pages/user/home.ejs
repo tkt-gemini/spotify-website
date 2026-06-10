@@ -1,5 +1,22 @@
 <div class="mb-12">
-  <h1 class="text-3xl font-bold mb-8">Good evening</h1>
+  <h1 class="text-3xl font-bold mb-8">Good Afternoon</h1>
+  
+  <div class="flex gap-2 mb-6 flex-wrap">
+    <% const genres = ['Pop', 'Rock', 'Lo-fi', 'EDM', 'Ballad', 'Hip-hop']; %>
+    <% const categories = ['Technology', 'Education', 'News', 'Storytelling']; %>
+
+    <a href="/app/home" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'all' && !genre && !category ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">All</a>
+    <a href="/app/home?type=music" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'music' && !genre ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">Music</a>
+    <a href="/app/home?type=podcast" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= type === 'podcast' && !category ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>">Podcasts</a>
+    
+    <% genres.forEach(g => { %>
+      <a href="/app/home?type=music&genre=<%= g %>" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= genre === g ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>"><%= g %></a>
+    <% }) %>
+
+    <% categories.forEach(c => { %>
+      <a href="/app/home?type=podcast&category=<%= c %>" class="px-4 py-1.5 rounded-full text-sm font-semibold transition <%= category === c ? 'bg-white text-black' : 'bg-gray-800 text-white hover:bg-gray-700' %>"><%= c %></a>
+    <% }) %>
+  </div>
 
   <!-- Tracks Section -->
   <% if (tracks && tracks.length > 0) { %>

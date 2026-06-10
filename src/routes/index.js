@@ -14,7 +14,39 @@ const ERROR_MESSAGES = {
 };
 
 // Public routes
-router.get('/', (req, res) => res.render('pages/home'));
+router.get('/', async (req, res) => {
+  const { type = 'all', genre, category } = req.query;
+  const isLogged = !!(req.session && req.session.userId);
+
+  const trackWhere = { status: 'PUBLISHED' };
+  const albumWhere = { status: 'PUBLISHED' };
+  const showWhere = { status: 'PUBLISHED' };
+  const episodeWhere = { status: 'PUBLISHED' };
+
+  if (genre) {
+    trackWhere.genre = genre;
+    albumWhere.genre = genre;
+  }
+  if (category) {
+    showWhere.category = category;
+    episodeWhere.category = category;
+  }
+
+  const [tracks, artists, albums, shows, episodes] = await Promise.all([
+    (type === 'all' || type === 'music') ? prisma.track.findMany({ where: trackWhere, include: { artist: true }, take: 12, orderBy: { createdAt: 'desc' } }) : [],
+    (type === 'all' || type === 'music') ? prisma.artist.findMany({ where: { status: 'PUBLISHED' }, take: 6, orderBy: { createdAt: 'desc' } }) : [],
+    (type === 'all' || type === 'music') ? prisma.album.findMany({ where: albumWhere, include: { artist: true }, take: 6, orderBy: { createdAt: 'desc' } }) : [],
+    (type === 'all' || type === 'podcast') ? prisma.podcastShow.findMany({ where: showWhere, include: { owner: true }, take: 6, orderBy: { createdAt: 'desc' } }) : [],
+    (type === 'all' || type === 'podcast') ? prisma.podcastEpisode.findMany({ where: episodeWhere, include: { show: true }, take: 12, orderBy: { createdAt: 'desc' } }) : []
+  ]);
+
+  res.render('pages/public/home', {
+    tracks, artists, albums, shows, episodes,
+    isLogged,
+    type, genre, category,
+    layout: 'layouts/public'
+  });
+});
 
 router.get('/login', requireGuest, (req, res) => {
   const errorKey = req.query.error;
@@ -92,29 +124,36 @@ router.post('/logout', requireAuth, (req, res) => {
 
 // Protected App routes
 router.get('/app/home', requireAuth, async (req, res) => {
+  const { type = 'all', genre, category } = req.query;
+
+  const trackWhere = { status: 'PUBLISHED' };
+  const showWhere = { status: 'PUBLISHED' };
+  if (genre) trackWhere.genre = genre;
+  if (category) showWhere.category = category;
+
   const [tracks, artists, playlists, podcasts] = await Promise.all([
-    prisma.track.findMany({
-      where: { status: 'PUBLISHED' },
+    (type === 'all' || type === 'music') ? prisma.track.findMany({
+      where: trackWhere,
       include: { artist: true },
       orderBy: { createdAt: 'desc' },
       take: 10
-    }),
-    prisma.artist.findMany({
+    }) : [],
+    (type === 'all' || type === 'music') ? prisma.artist.findMany({
       where: { status: 'PUBLISHED' },
       orderBy: { createdAt: 'desc' },
       take: 10
-    }),
-    prisma.playlist.findMany({
+    }) : [],
+    (type === 'all' || type === 'music') ? prisma.playlist.findMany({
       where: { isPublic: true },
       include: { user: true },
       orderBy: { createdAt: 'desc' },
       take: 10
-    }),
-    prisma.podcastShow.findMany({
-      where: { status: 'PUBLISHED' },
+    }) : [],
+    (type === 'all' || type === 'podcast') ? prisma.podcastShow.findMany({
+      where: showWhere,
       orderBy: { createdAt: 'desc' },
       take: 10
-    })
+    }) : []
   ]);
   
   res.render('pages/user/home', { 
@@ -122,17 +161,18 @@ router.get('/app/home', requireAuth, async (req, res) => {
     artists, 
     playlists, 
     podcasts, 
-    activeTab: 'home', 
+    activeTab: 'home',
+    type, genre, category,
     layout: 'layouts/user-app' 
   });
 });
 
 router.get('/app/search', requireAuth, async (req, res) => {
-  const { q, type = 'all' } = req.query;
+  const { q, type = 'all', genre, category } = req.query;
   const userId = req.session.userId;
   
   if (!q || q.trim() === '') {
-    return res.render('pages/user/search', { q: '', type, results: null, activeTab: 'search', layout: 'layouts/user-app' });
+    return res.render('pages/user/search', { q: '', type, genre, category, results: null, activeTab: 'search', layout: 'layouts/user-app' });
   }
 
   const query = q.trim();
@@ -144,11 +184,21 @@ router.get('/app/search', requireAuth, async (req, res) => {
     podcasts: []
   };
 
-  const likeCondition = { status: 'PUBLISHED' };
+  const trackWhere = { status: 'PUBLISHED', title: { contains: query } };
+  const albumWhere = { status: 'PUBLISHED', title: { contains: query } };
+  const showWhere = { status: 'PUBLISHED', title: { contains: query } };
+  
+  if (genre) {
+    trackWhere.genre = genre;
+    albumWhere.genre = genre;
+  }
+  if (category) {
+    showWhere.category = category;
+  }
 
   if (type === 'all' || type === 'track') {
     const tracks = await prisma.track.findMany({
-      where: { title: { contains: query }, ...likeCondition },
+      where: trackWhere,
       include: { artist: true, album: true }
     });
     
@@ -163,7 +213,7 @@ router.get('/app/search', requireAuth, async (req, res) => {
 
   if (type === 'all' || type === 'artist') {
     const artists = await prisma.artist.findMany({
-      where: { name: { contains: query }, ...likeCondition }
+      where: { name: { contains: query }, status: 'PUBLISHED' }
     });
     
     if (artists.length > 0) {
@@ -177,7 +227,7 @@ router.get('/app/search', requireAuth, async (req, res) => {
 
   if (type === 'all' || type === 'album') {
     results.albums = await prisma.album.findMany({
-      where: { title: { contains: query }, ...likeCondition },
+      where: albumWhere,
       include: { artist: true }
     });
   }
@@ -191,12 +241,12 @@ router.get('/app/search', requireAuth, async (req, res) => {
 
   if (type === 'all' || type === 'podcast') {
     results.podcasts = await prisma.podcastShow.findMany({
-      where: { title: { contains: query }, ...likeCondition },
+      where: showWhere,
       include: { owner: true }
     });
   }
 
-  res.render('pages/user/search', { q: query, type, results, activeTab: 'search', layout: 'layouts/user-app' });
+  res.render('pages/user/search', { q: query, type, genre, category, results, activeTab: 'search', layout: 'layouts/user-app' });
 });
 
 router.get('/app/artists/:artistId', requireAuth, async (req, res) => {
@@ -471,6 +521,72 @@ const adminRoutes = require('./admin');
 router.use('/admin', requireAuth, requireAdmin, adminRoutes);
 
 // API Routes
+
+// Public API Routes
+router.post('/api/v1/public/playback/start', async (req, res) => {
+  const { entityType, entityId } = req.body;
+  if (entityType !== 'track' && entityType !== 'episode') return res.status(400).json({ success: false });
+
+  const id = parseInt(entityId, 10);
+  if (isNaN(id)) return res.status(400).json({ success: false });
+
+  const playbackSessionId = crypto.randomUUID();
+
+  if (entityType === 'track') {
+    const track = await prisma.track.findUnique({ where: { id }, include: { artist: true } });
+    if (!track || track.status !== 'PUBLISHED' || !track.audioUrl) return res.status(400).json({ success: false });
+
+    await prisma.playbackEvent.create({
+      data: {
+        playbackSessionId,
+        userId: req.session ? req.session.userId : null,
+        trackId: track.id,
+        eventType: 'TRACK_STARTED'
+      }
+    });
+
+    return res.json({
+      success: true, playbackSessionId, title: track.title, artistName: track.artist.name, audioUrl: track.audioUrl, coverUrl: track.coverUrl
+    });
+  } else {
+    const episode = await prisma.podcastEpisode.findUnique({ where: { id }, include: { show: true } });
+    if (!episode || episode.status !== 'PUBLISHED' || !episode.audioUrl) return res.status(400).json({ success: false });
+
+    await prisma.playbackEvent.create({
+      data: {
+        playbackSessionId,
+        userId: req.session ? req.session.userId : null,
+        episodeId: episode.id,
+        eventType: 'EPISODE_STARTED'
+      }
+    });
+
+    return res.json({
+      success: true, playbackSessionId, title: episode.title, artistName: episode.show.title, audioUrl: episode.audioUrl, coverUrl: episode.show.coverUrl
+    });
+  }
+});
+
+router.post('/api/v1/public/playback/complete', async (req, res) => {
+  const { playbackSessionId, entityType, entityId } = req.body;
+  if (!playbackSessionId || !entityType || !entityId) return res.status(400).json({ success: false });
+
+  const id = parseInt(entityId, 10);
+  if (isNaN(id)) return res.status(400).json({ success: false });
+
+  await prisma.playbackEvent.create({
+    data: {
+      playbackSessionId,
+      userId: req.session ? req.session.userId : null,
+      trackId: entityType === 'track' ? id : null,
+      episodeId: entityType === 'episode' ? id : null,
+      eventType: entityType === 'track' ? 'TRACK_COMPLETED' : 'EPISODE_COMPLETED'
+    }
+  });
+
+  res.json({ success: true });
+});
+
 router.post('/api/v1/playback/start', requireAuth, async (req, res) => {
   const { entityType, entityId } = req.body;
   

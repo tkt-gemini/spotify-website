@@ -20,12 +20,25 @@
     </div>
   <% } else { %>
     <!-- Search Results -->
-    <div class="flex gap-2 mb-8">
-      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=all" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'all' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">All</a>
-      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=track" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'track' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Songs</a>
-      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=artist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'artist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Artists</a>
-      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=playlist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'playlist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Playlists</a>
-      <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=podcast" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'podcast' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Podcasts</a>
+    <div class="flex flex-col gap-4 mb-8">
+      <div class="flex gap-2">
+        <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=all" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'all' && !genre && !category ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">All</a>
+        <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=track" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'track' && !genre ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Songs</a>
+        <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=artist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'artist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Artists</a>
+        <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=playlist" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'playlist' ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Playlists</a>
+        <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=podcast" class="px-4 py-1 rounded-full text-sm font-semibold transition-colors <%= type === 'podcast' && !category ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>">Podcasts</a>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <% const genres = ['Pop', 'Rock', 'Lo-fi', 'EDM', 'Ballad', 'Hip-hop']; %>
+        <% const categories = ['Technology', 'Education', 'News', 'Storytelling']; %>
+
+        <% genres.forEach(g => { %>
+          <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=track&genre=<%= g %>" class="px-3 py-1 rounded-full text-xs font-semibold transition <%= genre === g ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>"><%= g %></a>
+        <% }) %>
+        <% categories.forEach(c => { %>
+          <a href="/app/search?q=<%= encodeURIComponent(q) %>&type=podcast&category=<%= c %>" class="px-3 py-1 rounded-full text-xs font-semibold transition <%= category === c ? 'bg-white text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700' %>"><%= c %></a>
+        <% }) %>
+      </div>
     </div>
 
     <% let hasResults = false; %>

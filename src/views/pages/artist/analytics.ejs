@@ -4,7 +4,7 @@
     <p class="text-zinc-400 mt-2">View performance metrics for your tracks.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
     <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-blue-500">
       <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Tracks</h3>
       <p class="text-4xl font-bold"><%= stats.totalTracks %></p>
@@ -16,28 +16,65 @@
     </div>
 
     <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-purple-500">
-      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Likes</h3>
-      <p class="text-4xl font-bold"><%= stats.totalLikes %></p>
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Playbacks</h3>
+      <p class="text-4xl font-bold"><%= stats.totalPlays %></p>
     </div>
 
     <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-red-500">
-      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Playbacks</h3>
-      <p class="text-4xl font-bold"><%= stats.totalPlaybackStarts %></p>
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Total Completions</h3>
+      <p class="text-4xl font-bold"><%= stats.totalCompletions %></p>
+    </div>
+
+    <div class="bg-zinc-800 p-6 rounded-lg border-l-4 border-yellow-500">
+      <h3 class="text-zinc-400 text-sm font-bold uppercase tracking-wider mb-2">Completion Rate</h3>
+      <p class="text-4xl font-bold"><%= stats.completionRate %>%</p>
     </div>
   </div>
 
-  <div class="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
-    <h2 class="text-xl font-bold mb-4">Top Performing Tracks</h2>
-    <% if (topTracks && topTracks.length > 0) { %>
-      <canvas id="topTracksChart" width="400" height="150"></canvas>
-      <script type="application/json" id="chartData">
-        <%- JSON.stringify(topTracks) %>
-      </script>
-    <% } else { %>
-      <div class="text-zinc-500 py-8 text-center">
-        No playback data available yet.
-      </div>
-    <% } %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
+      <h2 class="text-xl font-bold mb-4">Top Performing Tracks</h2>
+      <% if (topTracks && topTracks.length > 0) { %>
+        <canvas id="topTracksChart" width="400" height="250"></canvas>
+        <script type="application/json" id="chartData">
+          <%- JSON.stringify(topTracks) %>
+        </script>
+      <% } else { %>
+        <div class="text-zinc-500 py-8 text-center">
+          No playback data available yet.
+        </div>
+      <% } %>
+    </div>
+
+    <div class="bg-zinc-800/50 p-6 rounded-lg border border-zinc-700">
+      <h2 class="text-xl font-bold mb-4">Recent Events</h2>
+      <% if (recentEvents && recentEvents.length > 0) { %>
+        <ul class="space-y-4">
+          <% recentEvents.forEach(ev => { %>
+            <li class="flex items-start gap-4 p-3 bg-zinc-800 rounded">
+              <div class="bg-zinc-700 p-2 rounded-full mt-1 text-white">
+                <% if (ev.eventType === 'TRACK_COMPLETED') { %>
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                <% } else { %>
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                <% } %>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-white"><%= ev.trackTitle %></p>
+                <p class="text-sm text-zinc-400"><%= ev.eventType.replace('_', ' ') %> by <%= ev.user %></p>
+              </div>
+              <div class="text-xs text-zinc-500 text-right">
+                <%= new Date(ev.playedAt).toLocaleString() %>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <div class="text-zinc-500 py-8 text-center">
+          No events recorded.
+        </div>
+      <% } %>
+    </div>
   </div>
 </div>
 
