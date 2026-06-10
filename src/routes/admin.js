@@ -82,6 +82,61 @@ router.post('/users/:userId/default-role', async (req, res) => {
   res.redirect('/admin/users');
 });
 
+// POST /admin/users/:userId/plan
+router.post('/users/:userId/plan', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  const { newPlan } = req.body;
+
+  const validPlans = ['FREE', 'PREMIUM'];
+  if (!validPlans.includes(newPlan)) {
+    return res.redirect('/admin/users?error=Invalid plan');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.redirect('/admin/users?error=User not found');
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { plan: newPlan }
+  });
+
+  res.redirect('/admin/users');
+});
+
+// POST /admin/users/:userId/status
+router.post('/users/:userId/status', async (req, res) => {
+  const userId = parseInt(req.params.userId, 10);
+  const { newStatus } = req.body;
+
+  const validStatuses = ['ACTIVE', 'DISABLED'];
+  if (!validStatuses.includes(newStatus)) {
+    return res.redirect('/admin/users?error=Invalid status');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.redirect('/admin/users?error=User not found');
+
+  // Prevent disabling the last active admin
+  if (user.defaultRole === 'ADMIN' && newStatus === 'DISABLED') {
+    const activeAdminCount = await prisma.user.count({ 
+      where: { 
+        defaultRole: 'ADMIN',
+        status: 'ACTIVE'
+      } 
+    });
+    if (activeAdminCount <= 1 && user.status === 'ACTIVE') {
+      return res.redirect('/admin/users?error=Cannot disable the last active admin');
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { status: newStatus }
+  });
+
+  res.redirect('/admin/users');
+});
+
 // GET /admin/tracks
 router.get('/tracks', async (req, res) => {
   const tracks = await prisma.track.findMany({

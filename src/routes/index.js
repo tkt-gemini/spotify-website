@@ -9,7 +9,8 @@ const ERROR_MESSAGES = {
   invalid_credentials: 'Sai email hoặc mật khẩu.',
   email_exists: 'Email này đã được sử dụng.',
   invalid_input: 'Vui lòng điền đầy đủ và đúng định dạng.',
-  password_too_short: 'Mật khẩu phải có ít nhất 6 ký tự.'
+  password_too_short: 'Mật khẩu phải có ít nhất 6 ký tự.',
+  account_disabled: 'Tài khoản của bạn đã bị vô hiệu hóa.'
 };
 
 // Public routes
@@ -31,6 +32,9 @@ router.post('/login', requireGuest, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   
   if (user && await bcrypt.compare(password, user.passwordHash)) {
+    if (user.status === 'DISABLED') {
+      return res.redirect('/login?error=account_disabled');
+    }
     req.session.regenerate((err) => {
       if (err) return res.redirect('/login');
       req.session.userId = user.id;
@@ -88,13 +92,39 @@ router.post('/logout', requireAuth, (req, res) => {
 
 // Protected App routes
 router.get('/app/home', requireAuth, async (req, res) => {
-  const tracks = await prisma.track.findMany({
-    where: { status: 'PUBLISHED' },
-    include: { artist: true },
-    orderBy: { createdAt: 'desc' },
-    take: 20
+  const [tracks, artists, playlists, podcasts] = await Promise.all([
+    prisma.track.findMany({
+      where: { status: 'PUBLISHED' },
+      include: { artist: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    }),
+    prisma.artist.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    }),
+    prisma.playlist.findMany({
+      where: { isPublic: true },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    }),
+    prisma.podcastShow.findMany({
+      where: { status: 'PUBLISHED' },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    })
+  ]);
+  
+  res.render('pages/user/home', { 
+    tracks, 
+    artists, 
+    playlists, 
+    podcasts, 
+    activeTab: 'home', 
+    layout: 'layouts/user-app' 
   });
-  res.render('pages/user/home', { tracks, activeTab: 'home', layout: 'layouts/user-app' });
 });
 
 router.get('/app/search', requireAuth, async (req, res) => {
@@ -167,6 +197,74 @@ router.get('/app/search', requireAuth, async (req, res) => {
   }
 
   res.render('pages/user/search', { q: query, type, results, activeTab: 'search', layout: 'layouts/user-app' });
+});
+
+router.get('/app/artists/:artistId', requireAuth, async (req, res) => {
+  const artistId = parseInt(req.params.artistId, 10);
+  if (isNaN(artistId)) return res.redirect('/app/home');
+
+  const artist = await prisma.artist.findUnique({
+    where: { id: artistId }
+  });
+
+  if (!artist || artist.status !== 'PUBLISHED') {
+    return res.redirect('/app/home');
+  }
+
+  const [tracks, albums, followRecord] = await Promise.all([
+    prisma.track.findMany({
+      where: { artistId, status: 'PUBLISHED' },
+      orderBy: { createdAt: 'desc' }
+    }),
+    prisma.album.findMany({
+      where: { artistId, status: 'PUBLISHED' },
+      orderBy: { releaseDate: 'desc' }
+    }),
+    prisma.followedArtist.findUnique({
+      where: { userId_artistId: { userId: req.session.userId, artistId } }
+    })
+  ]);
+
+  res.render('pages/user/artist-detail', {
+    artist,
+    tracks,
+    albums,
+    isFollowed: !!followRecord,
+    activeTab: 'search',
+    layout: 'layouts/user-app'
+  });
+});
+
+router.get('/app/albums/:albumId', requireAuth, async (req, res) => {
+  const albumId = parseInt(req.params.albumId, 10);
+  if (isNaN(albumId)) return res.redirect('/app/home');
+
+  const album = await prisma.album.findUnique({
+    where: { id: albumId },
+    include: { artist: true }
+  });
+
+  if (!album || album.status !== 'PUBLISHED') {
+    return res.redirect('/app/home');
+  }
+
+  const [tracks, saveRecord] = await Promise.all([
+    prisma.track.findMany({
+      where: { albumId, status: 'PUBLISHED' },
+      orderBy: { trackNumber: 'asc' }
+    }),
+    prisma.savedAlbum.findUnique({
+      where: { userId_albumId: { userId: req.session.userId, albumId } }
+    })
+  ]);
+
+  res.render('pages/user/album-detail', {
+    album,
+    tracks,
+    isSaved: !!saveRecord,
+    activeTab: 'search',
+    layout: 'layouts/user-app'
+  });
 });
 
 router.get('/app/library', requireAuth, async (req, res) => {
@@ -261,20 +359,25 @@ router.get('/app/podcasts/:showId', requireAuth, async (req, res) => {
   if (isNaN(showId)) return res.redirect('/app/library');
 
   const show = await prisma.podcastShow.findUnique({
-    where: { id: showId, status: 'PUBLISHED' },
+    where: { id: showId },
     include: {
       owner: true,
       episodes: {
         where: { status: 'PUBLISHED' },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { publishedAt: 'desc' }
       }
     }
   });
 
-  if (!show) return res.redirect('/app/library');
+  if (!show || show.status !== 'PUBLISHED') return res.redirect('/app/library');
+
+  const subscribeRecord = await prisma.subscribedShow.findUnique({
+    where: { userId_showId: { userId: req.session.userId, showId } }
+  });
 
   res.render('pages/user/podcast-detail', {
     show,
+    isSubscribed: !!subscribeRecord,
     activeTab: 'home',
     layout: 'layouts/user-app'
   });
@@ -380,6 +483,51 @@ router.post('/api/v1/playback/start', requireAuth, async (req, res) => {
   }
 });
 
+router.post('/api/v1/playback/progress', requireAuth, async (req, res) => {
+  const { playbackSessionId, entityType, entityId, positionMs } = req.body;
+  if (!playbackSessionId || !entityType || !entityId) {
+    return res.status(400).json({ success: false });
+  }
+
+  const id = parseInt(entityId, 10);
+  if (isNaN(id)) return res.status(400).json({ success: false });
+
+  await prisma.playbackEvent.create({
+    data: {
+      playbackSessionId,
+      userId: req.session.userId,
+      trackId: entityType === 'track' ? id : null,
+      episodeId: entityType === 'episode' ? id : null,
+      eventType: entityType === 'track' ? 'TRACK_PROGRESS' : 'EPISODE_PROGRESS',
+      durationMs: positionMs ? parseInt(positionMs, 10) : null
+    }
+  });
+
+  res.json({ success: true });
+});
+
+router.post('/api/v1/playback/complete', requireAuth, async (req, res) => {
+  const { playbackSessionId, entityType, entityId } = req.body;
+  if (!playbackSessionId || !entityType || !entityId) {
+    return res.status(400).json({ success: false });
+  }
+
+  const id = parseInt(entityId, 10);
+  if (isNaN(id)) return res.status(400).json({ success: false });
+
+  await prisma.playbackEvent.create({
+    data: {
+      playbackSessionId,
+      userId: req.session.userId,
+      trackId: entityType === 'track' ? id : null,
+      episodeId: entityType === 'episode' ? id : null,
+      eventType: entityType === 'track' ? 'TRACK_COMPLETED' : 'EPISODE_COMPLETED'
+    }
+  });
+
+  res.json({ success: true });
+});
+
 // Phase 2 APIs
 router.post('/api/v1/me/library/tracks/:trackId', requireAuth, async (req, res) => {
   const trackId = parseInt(req.params.trackId, 10);
@@ -478,6 +626,60 @@ router.delete('/api/v1/playlists/:playlistId/tracks/:playlistTrackId', requireAu
     }
   });
 
+  res.json({ success: true });
+});
+
+router.post('/api/v1/me/library/albums/:albumId', requireAuth, async (req, res) => {
+  const albumId = parseInt(req.params.albumId, 10);
+  if (isNaN(albumId)) return res.status(400).json({ success: false });
+  
+  const album = await prisma.album.findUnique({ where: { id: albumId } });
+  if (!album || album.status !== 'PUBLISHED') return res.status(400).json({ success: false });
+
+  await prisma.savedAlbum.upsert({
+    where: { userId_albumId: { userId: req.session.userId, albumId } },
+    update: {},
+    create: { userId: req.session.userId, albumId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.delete('/api/v1/me/library/albums/:albumId', requireAuth, async (req, res) => {
+  const albumId = parseInt(req.params.albumId, 10);
+  if (isNaN(albumId)) return res.status(400).json({ success: false });
+  
+  await prisma.savedAlbum.deleteMany({
+    where: { userId: req.session.userId, albumId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.post('/api/v1/me/subscribe/shows/:showId', requireAuth, async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  if (isNaN(showId)) return res.status(400).json({ success: false });
+  
+  const show = await prisma.podcastShow.findUnique({ where: { id: showId } });
+  if (!show || show.status !== 'PUBLISHED') return res.status(400).json({ success: false });
+
+  await prisma.subscribedShow.upsert({
+    where: { userId_showId: { userId: req.session.userId, showId } },
+    update: {},
+    create: { userId: req.session.userId, showId }
+  });
+  
+  res.json({ success: true });
+});
+
+router.delete('/api/v1/me/subscribe/shows/:showId', requireAuth, async (req, res) => {
+  const showId = parseInt(req.params.showId, 10);
+  if (isNaN(showId)) return res.status(400).json({ success: false });
+  
+  await prisma.subscribedShow.deleteMany({
+    where: { userId: req.session.userId, showId }
+  });
+  
   res.json({ success: true });
 });
 

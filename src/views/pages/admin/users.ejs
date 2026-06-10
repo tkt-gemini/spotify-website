@@ -10,15 +10,15 @@
     </div>
   <% } %>
 
-  <div class="bg-zinc-800/30 rounded-lg overflow-hidden border border-zinc-800">
-    <table class="w-full text-left border-collapse">
+  <div class="bg-zinc-800/30 rounded-lg overflow-x-auto border border-zinc-800">
+    <table class="w-full text-left border-collapse min-w-[800px]">
       <thead>
         <tr class="bg-zinc-800 border-b border-zinc-700 text-zinc-400 text-sm">
           <th class="p-4 font-normal uppercase tracking-wider">ID</th>
           <th class="p-4 font-normal uppercase tracking-wider">Name / Email</th>
-          <th class="p-4 font-normal uppercase tracking-wider">Joined At</th>
-          <th class="p-4 font-normal uppercase tracking-wider">Default Role</th>
-          <th class="p-4 font-normal uppercase tracking-wider text-right">Action</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Role</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Plan</th>
+          <th class="p-4 font-normal uppercase tracking-wider">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -28,25 +28,40 @@
             <td class="p-4">
               <div class="font-bold text-white"><%= user.name %></div>
               <div class="text-sm text-zinc-400"><%= user.email %></div>
-            </td>
-            <td class="p-4 text-zinc-400 text-sm">
-              <%= new Date(user.createdAt).toLocaleDateString() %>
+              <div class="text-xs text-zinc-500 mt-1">Joined <%= new Date(user.createdAt).toLocaleDateString() %></div>
             </td>
             <td class="p-4">
-              <span class="px-2 py-1 bg-zinc-700 text-zinc-300 text-xs rounded uppercase font-bold">
-                <%= user.defaultRole %>
-              </span>
-            </td>
-            <td class="p-4 text-right">
-              <form action="/admin/users/<%= user.id %>/default-role" method="POST" class="inline-flex items-center gap-2">
-                <select name="newRole" class="bg-zinc-900 border border-zinc-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-white">
+              <form action="/admin/users/<%= user.id %>/default-role" method="POST" class="flex flex-col gap-1">
+                <select name="newRole" class="bg-zinc-900 border border-zinc-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-white mb-1">
                   <option value="USER" <%= user.defaultRole === 'USER' ? 'selected' : '' %>>USER</option>
                   <option value="ARTIST" <%= user.defaultRole === 'ARTIST' ? 'selected' : '' %>>ARTIST</option>
                   <option value="PODCASTER" <%= user.defaultRole === 'PODCASTER' ? 'selected' : '' %>>PODCASTER</option>
                   <option value="ADMIN" <%= user.defaultRole === 'ADMIN' ? 'selected' : '' %>>ADMIN</option>
                 </select>
-                <button type="submit" class="bg-white text-black px-3 py-1 rounded text-sm font-bold hover:bg-zinc-200 transition-colors">
-                  Save
+                <button type="submit" class="bg-zinc-700 text-white px-2 py-1 rounded text-xs hover:bg-zinc-600 transition-colors">
+                  Save Role
+                </button>
+              </form>
+            </td>
+            <td class="p-4">
+              <form action="/admin/users/<%= user.id %>/plan" method="POST" class="flex flex-col gap-1">
+                <select name="newPlan" class="bg-zinc-900 border border-zinc-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-white mb-1">
+                  <option value="FREE" <%= user.plan === 'FREE' ? 'selected' : '' %>>FREE</option>
+                  <option value="PREMIUM" <%= user.plan === 'PREMIUM' ? 'selected' : '' %>>PREMIUM</option>
+                </select>
+                <button type="submit" class="bg-zinc-700 text-white px-2 py-1 rounded text-xs hover:bg-zinc-600 transition-colors">
+                  Save Plan
+                </button>
+              </form>
+            </td>
+            <td class="p-4">
+              <form action="/admin/users/<%= user.id %>/status" method="POST" class="flex flex-col gap-1">
+                <select name="newStatus" class="bg-zinc-900 border border-zinc-700 text-sm rounded px-2 py-1 text-white focus:outline-none focus:border-white mb-1">
+                  <option value="ACTIVE" <%= user.status === 'ACTIVE' ? 'selected' : '' %>>ACTIVE</option>
+                  <option value="DISABLED" <%= user.status === 'DISABLED' ? 'selected' : '' %>>DISABLED</option>
+                </select>
+                <button type="submit" class="bg-zinc-700 text-white px-2 py-1 rounded text-xs hover:bg-zinc-600 transition-colors">
+                  Save Status
                 </button>
               </form>
             </td>

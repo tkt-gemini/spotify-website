@@ -1,12 +1,12 @@
-<div class="mb-8">
-  <h1 class="text-3xl font-bold mb-6">Good evening</h1>
+<div class="mb-12">
+  <h1 class="text-3xl font-bold mb-8">Good evening</h1>
 
+  <!-- Tracks Section -->
   <% if (tracks && tracks.length > 0) { %>
-    <h2 class="text-xl font-bold mb-4">Recently Published Tracks</h2>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    <h2 class="text-2xl font-bold mb-4">Recently Published Tracks</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-10">
       <% tracks.forEach(track => { %>
-        <div class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col">
-          <!-- Cover -->
+        <div class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col cursor-pointer">
           <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
             <% if (track.coverUrl) { %>
               <img src="<%= track.coverUrl %>" alt="<%= track.title %>" class="w-full h-full object-cover">
@@ -16,24 +16,17 @@
               </div>
             <% } %>
 
-            <!-- Play Button Overlay -->
             <% if (track.audioUrl) { %>
               <button class="js-play-entity absolute right-2 bottom-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-black opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all hover:scale-105 hover:bg-green-400 shadow-xl" data-entity-type="track" data-entity-id="<%= track.id %>">
                 <svg class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               </button>
-            <% } else { %>
-              <div class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span class="text-xs font-bold text-white uppercase px-2 py-1 border border-white rounded">No Audio</span>
-              </div>
             <% } %>
           </div>
-
-          <!-- Info -->
           <div class="flex flex-col flex-1">
             <h3 class="font-bold text-white truncate"><%= track.title %></h3>
             <p class="text-sm text-zinc-400 truncate mt-1">
               <% if (track.artist) { %>
-                <%= track.artist.name %>
+                <a href="/app/artists/<%= track.artist.id %>" class="hover:underline"><%= track.artist.name %></a>
               <% } else { %>
                 Unknown Artist
               <% } %>
@@ -43,10 +36,79 @@
       <% }) %>
     </div>
   <% } else { %>
-    <div class="bg-zinc-800/30 border border-zinc-700/50 rounded-lg p-12 text-center flex flex-col items-center justify-center h-64">
-      <svg class="w-16 h-16 text-zinc-600 mb-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
-      <h2 class="text-xl font-bold text-white mb-2">Chưa có bài hát nào</h2>
-      <p class="text-zinc-400">Bạn chưa có track nào được PUBLISHED. Hãy chờ podcaster hoặc artist tải lên nhé.</p>
-    </div>
+    <div class="bg-zinc-800/30 rounded-lg p-8 text-center text-zinc-400 mb-10">No tracks available yet.</div>
   <% } %>
+
+  <!-- Artists Section -->
+  <% if (artists && artists.length > 0) { %>
+    <h2 class="text-2xl font-bold mb-4">Popular Artists</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-10">
+      <% artists.forEach(artist => { %>
+        <a href="/app/artists/<%= artist.id %>" class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col text-center">
+          <div class="relative w-full aspect-square mb-4 shadow-lg rounded-full overflow-hidden bg-zinc-900 mx-auto">
+            <% if (artist.avatarUrl) { %>
+              <img src="<%= artist.avatarUrl %>" alt="<%= artist.name %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <div class="w-full h-full flex items-center justify-center text-zinc-700 bg-zinc-800">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              </div>
+            <% } %>
+          </div>
+          <h3 class="font-bold text-white truncate"><%= artist.name %></h3>
+          <p class="text-sm text-zinc-400 mt-1">Artist</p>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="bg-zinc-800/30 rounded-lg p-8 text-center text-zinc-400 mb-10">No artists available yet.</div>
+  <% } %>
+
+  <!-- Playlists Section -->
+  <% if (playlists && playlists.length > 0) { %>
+    <h2 class="text-2xl font-bold mb-4">Public Playlists</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-10">
+      <% playlists.forEach(playlist => { %>
+        <a href="/app/playlists/<%= playlist.id %>" class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col">
+          <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
+            <% if (playlist.coverUrl) { %>
+              <img src="<%= playlist.coverUrl %>" alt="<%= playlist.name %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <div class="w-full h-full flex items-center justify-center text-zinc-700 bg-zinc-800">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M4 10h12v2H4v-2zm0-4h12v2H4V6zm0 8h8v2H4v-2zm10 0v6l5-3-5-3z"/></svg>
+              </div>
+            <% } %>
+          </div>
+          <h3 class="font-bold text-white truncate"><%= playlist.name %></h3>
+          <p class="text-sm text-zinc-400 truncate mt-1">By <%= playlist.user ? playlist.user.name : 'Unknown' %></p>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="bg-zinc-800/30 rounded-lg p-8 text-center text-zinc-400 mb-10">No playlists available yet.</div>
+  <% } %>
+
+  <!-- Podcasts Section -->
+  <% if (podcasts && podcasts.length > 0) { %>
+    <h2 class="text-2xl font-bold mb-4">Podcasts</h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-10">
+      <% podcasts.forEach(podcast => { %>
+        <a href="/app/podcasts/<%= podcast.id %>" class="bg-zinc-800/40 p-4 rounded-md hover:bg-zinc-800 transition-colors group relative flex flex-col">
+          <div class="relative w-full aspect-square mb-4 shadow-lg rounded overflow-hidden bg-zinc-900">
+            <% if (podcast.coverUrl) { %>
+              <img src="<%= podcast.coverUrl %>" alt="<%= podcast.title %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <div class="w-full h-full flex items-center justify-center text-zinc-700 bg-zinc-800">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+              </div>
+            <% } %>
+          </div>
+          <h3 class="font-bold text-white truncate"><%= podcast.title %></h3>
+          <p class="text-sm text-zinc-400 truncate mt-1">Podcast</p>
+        </a>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="bg-zinc-800/30 rounded-lg p-8 text-center text-zinc-400 mb-10">No podcasts available yet.</div>
+  <% } %>
+
 </div>

@@ -25,6 +25,14 @@ async function attachCurrentUserToLocals(req, res, next) {
       });
       
       if (user) {
+        if (user.status === 'DISABLED') {
+          req.session.destroy();
+          if (req.path.startsWith('/api/')) {
+            return res.status(403).json({ error: 'Account is disabled' });
+          }
+          return res.redirect('/login?error=account_disabled');
+        }
+
         // Exclude passwordHash from being exposed to views
         const { passwordHash, ...userWithoutPassword } = user;
         res.locals.currentUser = userWithoutPassword;

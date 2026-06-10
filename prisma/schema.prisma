@@ -18,6 +18,8 @@ model User {
   passwordHash       String
   name               String
   defaultRole        Role                @default(USER) // Dùng để chọn landing page
+  plan               Plan                @default(FREE)
+  status             UserStatus          @default(ACTIVE)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -42,6 +44,16 @@ enum Role {
   USER
   ARTIST
   PODCASTER
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
 }
 
 enum ContentStatus {

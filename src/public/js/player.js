@@ -11,6 +11,12 @@ const playerTitle = document.getElementById('player-title');
 const playerArtist = document.getElementById('player-artist');
 const playerCoverContainer = document.getElementById('player-cover-container');
 
+// Playback session state
+let currentSessionId = null;
+let currentEntityType = null;
+let currentEntityId = null;
+let progressInterval = null;
+
 // Format time utility (seconds to m:ss)
 function formatTime(seconds) {
   if (isNaN(seconds)) return '0:00';
@@ -31,11 +37,63 @@ function updatePlayPauseIcons() {
 }
 
 // Audio Event Listeners
-audio.addEventListener('play', updatePlayPauseIcons);
-audio.addEventListener('pause', updatePlayPauseIcons);
-audio.addEventListener('ended', () => {
+audio.addEventListener('play', () => {
   updatePlayPauseIcons();
+  startProgressReporting();
 });
+audio.addEventListener('pause', () => {
+  updatePlayPauseIcons();
+  stopProgressReporting();
+});
+audio.addEventListener('ended', async () => {
+  updatePlayPauseIcons();
+  stopProgressReporting();
+  if (currentSessionId && currentEntityType && currentEntityId) {
+    try {
+      await fetch('/api/v1/playback/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playbackSessionId: currentSessionId,
+          entityType: currentEntityType,
+          entityId: currentEntityId
+        })
+      });
+    } catch (err) {
+      console.error('Failed to report completion:', err);
+    }
+  }
+});
+
+function startProgressReporting() {
+  if (progressInterval) clearInterval(progressInterval);
+  // Report progress every 15 seconds
+  progressInterval = setInterval(async () => {
+    if (currentSessionId && currentEntityType && currentEntityId && !audio.paused) {
+      try {
+        await fetch('/api/v1/playback/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playbackSessionId: currentSessionId,
+            entityType: currentEntityType,
+            entityId: currentEntityId,
+            positionMs: Math.floor(audio.currentTime * 1000)
+          })
+        });
+      } catch (err) {
+        console.error('Failed to report progress:', err);
+      }
+    }
+  }, 15000);
+}
+
+function stopProgressReporting() {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+}
 
 audio.addEventListener('timeupdate', () => {
   timeCurrent.textContent = formatTime(audio.currentTime);
@@ -96,6 +154,11 @@ document.addEventListener('click', async (e) => {
     if (data.coverUrl) {
       playerCoverContainer.innerHTML = `<img src="${data.coverUrl}" class="w-full h-full object-cover" alt="Cover">`;
     }
+
+    // Store session state
+    currentSessionId = data.playbackSessionId;
+    currentEntityType = entityType;
+    currentEntityId = entityId;
 
     // Load Audio and Play
     audio.src = data.audioUrl;
